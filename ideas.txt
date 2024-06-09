@@ -1,0 +1,22 @@
+Django backend, vue.js frontend
+Tagging support (tag roads, trails, etc)
+Sharing (share individual items or select items or tags to include)
+Organization by folder
+When updating items, create a new version
+No spatial editing
+Spatial statistics
+Track replay and stats
+When importing, list all new items and make it quick and easy to edit the attributes of new items
+Visibility: private, public, restricted (only logged in users)
+Save the unmodified original imported file in a special table and link it to the item ID
+
+
+## Stretch Goals
+Additional map layers
+Option to add external custom layers
+Ability to set layer when sharing web map
+Geotagged photo support (set path to scan)
+Group support and share to group
+Some way to record and push to server from an app. Use GPSLogger with %ALL
+Download all data as KML
+A very simple Android app to Make it easy to push data to the server. For example, export from back country navigator, share to this app, import to server using app

@@ -9,10 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.21"
+    "@types/geojson": "^7946.0.14",
+    "axios": "^1.7.2",
+    "dropzone-vue": "^0.1.11",
+    "geojson": "^0.5.0",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.2",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
     "vite": "^5.2.8"
   }
 }

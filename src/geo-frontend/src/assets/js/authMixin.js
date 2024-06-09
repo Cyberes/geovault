@@ -1,0 +1,13 @@
+import {UserInfo} from "@/assets/js/store-types.ts";
+import {getUserInfo} from "@/assets/js/auth.js";
+
+export const authMixin = {
+    async created() {
+        const userStatus = await getUserInfo()
+        if (!userStatus.authorized) {
+            window.location = "/account/login/"
+        }
+        const userInfo = new UserInfo(userStatus.username, userStatus.id)
+        this.$store.commit('userInfo', userInfo)
+    },
+}

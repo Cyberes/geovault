@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'geo_backend.middleware.CustomHeaderMiddleware',
 ]
 
 ROOT_URLCONF = 'geo_backend.urls'
@@ -129,3 +130,5 @@ LOGOUT_REDIRECT_URL = '/#/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '../geo-frontend/dist/static'),
 ]
+
+APPEND_SLASH = False

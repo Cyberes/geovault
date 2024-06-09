@@ -4,10 +4,6 @@ from django.shortcuts import render
 from users.forms import CustomUserCreationForm
 
 
-def index(request):
-    return render(request, "index.html")
-
-
 def register(request):
     if request.method == "GET":
         return render(

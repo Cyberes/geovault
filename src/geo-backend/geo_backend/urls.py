@@ -16,11 +16,13 @@ Including another URLconf
 """
 from django.conf.urls import include
 from django.contrib import admin
-from django.urls import re_path, path
+from django.urls import path, re_path
 
-from geo_backend import views
+from geo_backend.views import index
 
 urlpatterns = [
-    path('', include("users.urls")),
+    path('', index),
+    re_path(r"^account/", include("django.contrib.auth.urls")),
     path('admin/', admin.site.urls),
+    path('', include("users.urls")),
 ]
