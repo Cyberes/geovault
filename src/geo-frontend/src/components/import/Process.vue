@@ -1,7 +1,9 @@
 <template>
   <div v-if="msg !== ''">
-    <p>{{ msg }}</p>
+    <p class="font-bold">{{ msg }}</p>
   </div>
+
+  <!-- TODO: loading indicator -->
 
   <div>
     <li v-for="(item, index) in geoJsonData" :key="`item-${index}`">
@@ -17,6 +19,9 @@ import {mapState} from "vuex";
 import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {capitalizeFirstLetter} from "@/assets/js/string.js";
+
+// TODO: for each feature, query the DB and check if there is a duplicate. For points that's duplicate coords, for linestrings and polygons that's duplicate points
+// TODO: auto-refresh if still processing
 
 export default {
   computed: {
@@ -40,16 +45,21 @@ export default {
       return item
     }
   },
-  created() {
-    axios.get('/api/item/import/get/' + this.id).then(response => {
-      if (!response.data.success) {
-        this.handleError(response.data.msg)
-      } else {
-        this.geoJsonData = response.data.data
-      }
-    }).catch(error => {
-      this.handleError(error.message)
-    });
+  beforeRouteEnter(to, from, next) {
+    next(async vm => {
+      axios.get('/api/data/item/import/get/' + vm.id).then(response => {
+        if (!response.data.success) {
+          vm.handleError(response.data.msg)
+        } else {
+          if (Object.keys(response.data.geojson).length > 0) {
+            vm.geoJsonData = response.data.geojson
+          }
+          vm.msg = response.data.msg
+        }
+      }).catch(error => {
+        vm.handleError(error.message)
+      });
+    })
   },
 };
 </script>

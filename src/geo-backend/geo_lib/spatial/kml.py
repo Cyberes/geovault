@@ -1,58 +1,83 @@
 import io
-import re
+import json
 import zipfile
+from typing import Union, Tuple
 
-from fastkml import kml
-from shapely.geometry import mapping, shape
+import geojson
+import kml2geojson
+from dateparser import parse
+from geojson import FeatureCollection, Point, LineString, Polygon
+
+from geo_lib.types.geojson import GeojsonRawProperty
 
 
-# TODO: preserve KML object styling, such as color and opacity
-
-def kml_to_geojson(kml_bytes):
+def kmz_to_kml(kml_bytes: Union[str, bytes]) -> str:
+    if isinstance(kml_bytes, str):
+        kml_bytes = kml_bytes.encode('utf-8')
     try:
         # Try to open as a zipfile (KMZ)
         with zipfile.ZipFile(io.BytesIO(kml_bytes), 'r') as kmz:
             # Find the first .kml file in the zipfile
             kml_file = [name for name in kmz.namelist() if name.endswith('.kml')][0]
-            doc = kmz.read(kml_file).decode('utf-8')
+            return kmz.read(kml_file).decode('utf-8')
     except zipfile.BadZipFile:
         # If not a zipfile, assume it's a KML file
-        doc = kml_bytes.decode('utf-8')
+        return kml_bytes.decode('utf-8')
 
-    # Remove XML declaration
-    doc = re.sub(r'<\?xml.*\?>', '', doc)
 
-    k = kml.KML()
-    k.from_string(doc)
+def kml_to_geojson(kml_bytes) -> Tuple[dict, list]:
+    # TODO: preserve KML object styling, such as color and opacity
+    doc = kmz_to_kml(kml_bytes)
 
-    features = []
-    process_feature(features, k)
+    converted_kml = kml2geojson.main.convert(io.BytesIO(doc.encode('utf-8')))
 
-    return {
+    features, messages = process_feature(converted_kml)
+    data = {
         'type': 'FeatureCollection',
         'features': features
     }
+    return load_geojson_type(data), messages
 
 
-def process_feature(features, feature):
-    # Recursive function to handle folders within folders
-    if isinstance(feature, (kml.Document, kml.Folder, kml.KML)):
-        for child in feature.features():
-            process_feature(features, child)
-    elif isinstance(feature, kml.Placemark):
-        geom = shape(feature.geometry)
-        # Only keep points, lines and polygons
-        if geom.geom_type in ['Point', 'LineString', 'Polygon']:
-            features.append({
-                'type': 'Feature',
-                'properties': {
-                    'name': feature.name,
-                    'description': feature.description,
-                },
-                'geometry': mapping(geom),
-            })
-            if feature.extended_data is not None:
-                features['properties'].update(feature.extended_data)
-    else:
-        # raise ValueError(f'Unknown feature: {type(feature)}')
-        pass
+def process_feature(converted_kml):
+    features = []
+    messages = []
+    for feature in converted_kml[0]['features']:
+        if feature['geometry']['type'] in ['Point', 'LineString', 'Polygon']:
+            if feature['properties'].get('times'):
+                for i, timestamp_str in enumerate(feature['properties']['times']):
+                    timestamp = int(parse(timestamp_str).timestamp() * 1000)
+                    feature['geometry']['coordinates'][i].append(timestamp)
+            feature['properties'] = GeojsonRawProperty(**feature['properties']).dict()
+            features.append(feature)
+        else:
+            # Log the error
+            messages.append(f'Feature type {feature["properties"]["type"]} not supported')
+    return features, messages
+
+
+def load_geojson_type(data: dict) -> dict:
+    features = []
+    for feature in data['features']:
+        if feature['geometry']['type'] == 'Point':
+            features.append(
+                Point(coordinates=feature['geometry']['coordinates'], properties=feature['properties'])
+            )
+        elif feature['geometry']['type'] == 'LineString':
+            features.append(
+                LineString(coordinates=feature['geometry']['coordinates'], properties=feature['properties'])
+            )
+        elif feature['geometry']['type'] == 'Polygon':
+            features.append(
+                Polygon(coordinates=feature['geometry']['coordinates'], properties=feature['properties'])
+            )
+    collection = FeatureCollection(features)
+    geojson_dict = json.loads(geojson.dumps(collection, sort_keys=True))
+    for item in geojson_dict['features']:
+        item['geometry'] = {
+            'type': item.pop('type'),
+            'coordinates': item.pop('coordinates'),
+        }
+        item['type'] = 'Feature'
+        item['properties']['title'] = item['properties'].pop('name')
+    return geojson_dict
