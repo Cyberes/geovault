@@ -9,7 +9,7 @@
 
   <div class="relative w-[90%] m-auto">
     <div>
-      <input :disabled="disableUpload" type="file" @change="onFileChange">
+      <input id="uploadInput" :disabled="disableUpload" type="file" @change="onFileChange">
       <button :disabled="disableUpload" @click="upload">Upload</button>
     </div>
   </div>
@@ -28,7 +28,9 @@
     <tr v-for="(item, index) in processQueue" :key="`item-${index}`">
       <td><a :href="`/#/import/process/${item.id}`">{{ item.original_filename }}</a></td>
       <td>{{ item.feature_count }}</td>
-      <td>button to delete from queue</td>
+      <td>
+        <button @click="deleteItem(item.id)">Delete</button>
+      </td>
     </tr>
     </tbody>
   </table>
@@ -61,28 +63,33 @@ export default {
       this.file = e.target.files[0]
       const fileType = this.file.name.split('.').pop().toLowerCase()
       if (fileType !== 'kmz' && fileType !== 'kml') {
-        alert('Invalid file type. Only KMZ and KML files are allowed.')
-        e.target.value = '' // Reset the input value
+        alert('Invalid file type. Only KMZ and KML files are allowed.') // TODO: have this be a message on the page?
+        e.target.value = "" // Reset the input value
       }
     },
-    upload() {
+    async upload() {
       this.uploadMsg = ""
       if (this.file == null) {
         return
       }
       let formData = new FormData()
       formData.append('file', this.file)
-      axios.post('/api/data/item/import/upload/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'X-CSRFToken': this.userInfo.csrftoken
-        }
-      }).then(response => {
+      try {
+        const response = await axios.post('/api/data/item/import/upload/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-CSRFToken': this.userInfo.csrftoken
+          }
+        })
         this.uploadMsg = `<p>${capitalizeFirstLetter(response.data.msg).trim(".")}.</p><p><a href="/#/import/process/${response.data.id}">Continue to Import</a>`
         this.disableUpload = true
-      }).catch(error => {
+        await this.fetchQueueList()
+        this.file = null
+        document.getElementById("uploadInput").value = ""
+        this.disableUpload = false
+      } catch (error) {
         this.handleError(error)
-      })
+      }
     },
     handleError(error) {
       console.error("Upload failed:", error)
@@ -93,6 +100,18 @@ export default {
     async fetchQueueList() {
       const response = await axios.get('/api/data/item/import/get/mine')
       this.processQueue = response.data.data
+    },
+    async deleteItem(id) {
+      try {
+        const response = await axios.delete('/api/data/item/import/delete/' + id, {
+          headers: {
+            'X-CSRFToken': this.userInfo.csrftoken
+          }
+        })
+        await this.fetchQueueList()
+      } catch (error) {
+        alert(`Failed to delete ${id}: ${error.message}`)
+      }
     }
   },
   async created() {
@@ -112,13 +131,4 @@ export default {
 </script>
 
 <style scoped>
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
-}
 </style>

@@ -81,10 +81,22 @@ def fetch_queued(request):
     user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geojson', 'original_filename', 'raw_kml_hash', 'data', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     for i, item in enumerate(data):
-        count = len(item['geojson']['features'])
+        count = len(item['geojson'].get('features', []))
         del item['geojson']
         item['feature_count'] = count
     return JsonResponse({'data': data})
+
+
+@login_required_401
+def delete_import_queue(request, id):
+    if request.method == 'DELETE':
+        try:
+            queue = ImportQueue.objects.get(id=id)
+        except ImportQueue.DoesNotExist:
+            return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
+        queue.delete()
+        return JsonResponse({'success': True})
+    return HttpResponse(status=405)
 
 
 def _hash_kml(b: str):
