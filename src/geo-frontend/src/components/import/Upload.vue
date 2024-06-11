@@ -15,25 +15,6 @@
   </div>
 
   <div v-if="uploadMsg !== ''" class="w-[90%] m-auto mt-10" v-html="uploadMsg"></div>
-
-  <table>
-    <thead>
-    <tr>
-      <th>File Name</th>
-      <th>Features</th>
-      <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr v-for="(item, index) in processQueue" :key="`item-${index}`">
-      <td><a :href="`/#/import/process/${item.id}`">{{ item.original_filename }}</a></td>
-      <td>{{ item.feature_count }}</td>
-      <td>
-        <button @click="deleteItem(item.id)">Delete</button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
 </template>
 
 <script>

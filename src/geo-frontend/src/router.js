@@ -11,6 +11,11 @@ const routes = [
         name: 'Dashboard',
         component: () => import('./components/dashboard/Dashboard.vue'),
     },
+        {
+        path: '/import',
+        name: 'Import',
+        component: () => import('./components/import/ImportHome.vue'),
+    },
     {
         path: '/import/upload',
         name: 'Import Data',

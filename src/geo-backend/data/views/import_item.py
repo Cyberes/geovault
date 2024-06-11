@@ -82,8 +82,9 @@ def fetch_queued(request):
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     for i, item in enumerate(data):
         count = len(item['geojson'].get('features', []))
-        del item['geojson']
+        item['processing'] = len(item['geojson']) == 0
         item['feature_count'] = count
+        del item['geojson']
     return JsonResponse({'data': data})
 
 
