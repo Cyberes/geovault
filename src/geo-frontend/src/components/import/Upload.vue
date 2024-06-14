@@ -56,6 +56,7 @@ export default {
       let formData = new FormData()
       formData.append('file', this.file)
       try {
+        this.disableUpload = true
         const response = await axios.post('/api/data/item/import/upload/', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -63,7 +64,6 @@ export default {
           }
         })
         this.uploadMsg = `<p>${capitalizeFirstLetter(response.data.msg).trim(".")}.</p><p><a href="/#/import/process/${response.data.id}">Continue to Import</a>`
-        this.disableUpload = true
         await this.fetchQueueList()
         this.file = null
         document.getElementById("uploadInput").value = ""
@@ -82,18 +82,6 @@ export default {
       const response = await axios.get('/api/data/item/import/get/mine')
       this.processQueue = response.data.data
     },
-    async deleteItem(id) {
-      try {
-        const response = await axios.delete('/api/data/item/import/delete/' + id, {
-          headers: {
-            'X-CSRFToken': this.userInfo.csrftoken
-          }
-        })
-        await this.fetchQueueList()
-      } catch (error) {
-        alert(`Failed to delete ${id}: ${error.message}`)
-      }
-    }
   },
   async created() {
   },

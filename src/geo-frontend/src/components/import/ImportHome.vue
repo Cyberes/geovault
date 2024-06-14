@@ -10,6 +10,7 @@
     <table>
       <thead>
       <tr>
+        <th>ID</th>
         <th>File Name</th>
         <th>Features</th>
         <th></th>
@@ -18,13 +19,16 @@
       <tbody>
       <tr v-for="(item, index) in processQueue" :key="`item-${index}`">
         <td>
+          <a :href="`/#/import/process/${item.id}`">{{ item.id }}</a>
+        </td>
+        <td>
           <a :href="`/#/import/process/${item.id}`">{{ item.original_filename }}</a>
         </td>
         <td>
           {{ item.processing === true ? "processing" : item.feature_count }}
         </td>
         <td>
-          <button @click="deleteItem(item.id)">Delete</button>
+          <button @click="deleteItem(item, index)">Delete</button>
         </td>
       </tr>
       </tbody>
@@ -54,17 +58,21 @@ export default {
       const response = await axios.get('/api/data/item/import/get/mine')
       this.processQueue = response.data.data
     },
-    async deleteItem(id) {
-      try {
-        const response = await axios.delete('/api/data/item/import/delete/' + id, {
-          headers: {
-            'X-CSRFToken': this.userInfo.csrftoken
-          }
-        })
-        await this.fetchQueueList()
-      } catch (error) {
-        alert(`Failed to delete ${id}: ${error.message}`)
-      }
+    async deleteItem(item, index) {
+      if (window.confirm(`Delete "${item.original_filename}" (#${item.id})`))
+        try {
+          this.processQueue.splice(index, 1)
+          // TODO: add a message popup when delete is completed
+          const response = await axios.delete('/api/data/item/import/delete/' + item.id, {
+            headers: {
+              'X-CSRFToken': this.userInfo.csrftoken
+            }
+          })
+          await this.fetchQueueList()
+        } catch (error) {
+          alert(`Failed to delete ${item.id}: ${error.message}`)
+          this.processQueue.splice(index, 0, item)
+        }
     }
   },
   async created() {
