@@ -1,5 +1,5 @@
 from django.contrib.auth import login
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from users.forms import CustomUserCreationForm
 
@@ -15,3 +15,6 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            return redirect('/account/login/')
+        else:
+            return render(request, "users/register.html", {"form": form})  # return the form with errors

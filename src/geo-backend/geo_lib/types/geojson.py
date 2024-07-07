@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class GeojsonRawProperty(BaseModel):
-    # Whitelist these properties.
+    # A class to whitelist these properties.
     name: str
     description: Optional[str] = None
+    feature_tags: List[str] = Field(default_factory=list)

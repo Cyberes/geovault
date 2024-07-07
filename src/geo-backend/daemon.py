@@ -1,4 +1,5 @@
 import logging
+import sys
 import threading
 import time
 
@@ -7,6 +8,7 @@ from geo_lib.daemon.workers.importer import import_worker
 from geo_lib.redis import flush_redis
 
 logging.basicConfig(level=logging.INFO)  # TODO: config level
+_logger = logging.getLogger("DAEMON")
 
 flush_redis()
 
@@ -15,6 +17,11 @@ Database.initialise(minconn=1, maxconn=100, host='h.postgres.nb', database='geob
 
 import_thread = threading.Thread(target=import_worker)
 import_thread.start()
+_logger.info('Started importer')
 
 while True:
-    time.sleep(3600)
+    try:
+        time.sleep(3600)
+    except KeyboardInterrupt:
+        # TODO: shut down workers
+        sys.exit(0)

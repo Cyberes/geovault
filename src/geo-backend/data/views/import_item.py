@@ -70,21 +70,21 @@ def fetch_import_queue(request, id):
         if queue.user_id != request.user.id:
             return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
         if len(queue.geojson):
-            return JsonResponse({'success': True, 'geojson': queue.geojson}, status=200)
-        return JsonResponse({'success': True, 'geojson': {}, 'msg': 'uploaded data still processing'}, status=200)
+            return JsonResponse({'success': True, 'geofeatures': queue.geojson}, status=200)
+        return JsonResponse({'success': True, 'geofeatures': {}, 'msg': 'uploaded data still processing'}, status=200)
     except ImportQueue.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
 
 
 @login_required_401
 def fetch_queued(request):
-    user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geojson', 'original_filename', 'raw_kml_hash', 'data', 'timestamp')
+    user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     for i, item in enumerate(data):
-        count = len(item['geojson'].get('features', []))
-        item['processing'] = len(item['geojson']) == 0
+        count = len(item['geofeatures'])
+        item['processing'] = len(item['geofeatures']) == 0
         item['feature_count'] = count
-        del item['geojson']
+        del item['geofeatures']
     return JsonResponse({'data': data})
 
 
