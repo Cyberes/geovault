@@ -8,7 +8,8 @@ from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 
 from data.models import ImportQueue
-from geo_lib.spatial.kml import kmz_to_kml
+from geo_lib.daemon.database.locking import DBLockManager
+from geo_lib.daemon.workers.workers_lib.importer.kml import kmz_to_kml
 from geo_lib.website.auth import login_required_401
 
 
@@ -65,24 +66,26 @@ def upload_item(request):
 def fetch_import_queue(request, id):
     if id is None:
         return JsonResponse({'success': False, 'msg': 'ID not provided', 'code': 400}, status=400)
+    lock_manager = DBLockManager()
     try:
         queue = ImportQueue.objects.get(id=id)
         if queue.user_id != request.user.id:
             return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
-        if len(queue.geojson):
-            return JsonResponse({'success': True, 'geofeatures': queue.geojson}, status=200)
-        return JsonResponse({'success': True, 'geofeatures': {}, 'msg': 'uploaded data still processing'}, status=200)
+        if not lock_manager.is_locked('data_importqueue', queue.id) and (len(queue.geofeatures) or len(queue.log)):
+            return JsonResponse({'success': True, 'geofeatures': queue.geofeatures, 'log': queue.log}, status=200)
+        return JsonResponse({'success': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
     except ImportQueue.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
 
 
 @login_required_401
 def fetch_queued(request):
-    user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'timestamp')
+    user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
+    lock_manager = DBLockManager()
     for i, item in enumerate(data):
         count = len(item['geofeatures'])
-        item['processing'] = len(item['geofeatures']) == 0
+        item['processing'] = not (len(item['geofeatures']) and len(item['log'])) and lock_manager.is_locked('data_importqueue', item['id'])
         item['feature_count'] = count
         del item['geofeatures']
     return JsonResponse({'data': data})

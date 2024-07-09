@@ -5,8 +5,14 @@
 
   <!-- TODO: loading indicator -->
 
+  <div id="importMessages">
+    <h2>Messages</h2>
+    <li v-for="(item, index) in importResponse.log" :key="`item-${index}`">
+      <p class="font-bold">{{ item }}</p>
+    </li>
+  </div>
   <div>
-    <li v-for="(item, index) in geoJsonData" :key="`item-${index}`">
+    <li v-for="(item, index) in importResponse.geofeatures" :key="`item-${index}`">
       <pre>
         {{ parseGeoJson(item) }}
       </pre>
@@ -31,7 +37,7 @@ export default {
   data() {
     return {
       msg: "",
-      geoJsonData: {},
+      importResponse: {},
     }
   },
   mixins: [authMixin],
@@ -51,8 +57,8 @@ export default {
         if (!response.data.success) {
           vm.handleError(response.data.msg)
         } else {
-          if (Object.keys(response.data.geojson).length > 0) {
-            vm.geoJsonData = response.data.geojson
+          if (Object.keys(response.data).length > 0) {
+            vm.importResponse = response.data
           }
           vm.msg = response.data.msg
         }

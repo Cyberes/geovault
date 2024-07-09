@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import List
 
-from geo_lib.types.item import GeoFeature
+from geo_lib.types.feature import GeoFeatureSupported
 
 
-def generate_auto_tags(feature: GeoFeature) -> List[str]:
+def generate_auto_tags(feature: GeoFeatureSupported) -> List[str]:
     tags = []
-    tags.append(f'type:{feature.geometry.type.value}')
+    tags.append(f'type:{feature.type.value}')
     now = datetime.now()
     tags.append(f'year:{now.year}')
     tags.append(f'month:{now.strftime("%B")}')

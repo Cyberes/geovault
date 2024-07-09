@@ -6,8 +6,9 @@ from typing import Union, Tuple
 import geojson
 import kml2geojson
 from dateparser import parse
-from geojson import FeatureCollection, Point, LineString, Polygon
+from geojson import Point, LineString, Polygon, FeatureCollection
 
+from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
 from geo_lib.types.geojson import GeojsonRawProperty
 
 
@@ -52,7 +53,7 @@ def process_feature(converted_kml):
             features.append(feature)
         else:
             # Log the error
-            messages.append(f'Feature type {feature["properties"]["type"]} not supported')
+            messages.append(create_import_log_msg(f'Feature type {feature["properties"]["type"]} not supported'))
     return features, messages
 
 
