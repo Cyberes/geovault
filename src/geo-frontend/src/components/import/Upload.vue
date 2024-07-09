@@ -36,7 +36,6 @@ export default {
       file: null,
       disableUpload: false,
       uploadMsg: "",
-      processQueue: []
     }
   },
   methods: {
@@ -77,10 +76,6 @@ export default {
       if (error.response.data.msg != null) {
         this.uploadMsg = error.response.data.msg
       }
-    },
-    async fetchQueueList() {
-      const response = await axios.get('/api/data/item/import/get/mine')
-      this.processQueue = response.data.data
     },
   },
   async created() {

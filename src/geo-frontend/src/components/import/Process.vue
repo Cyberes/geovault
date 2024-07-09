@@ -38,6 +38,7 @@ export default {
     return {
       msg: "",
       importResponse: {},
+      currentId: null,
     }
   },
   mixins: [authMixin],
@@ -53,18 +54,24 @@ export default {
   },
   beforeRouteEnter(to, from, next) {
     next(async vm => {
-      axios.get('/api/data/item/import/get/' + vm.id).then(response => {
-        if (!response.data.success) {
-          vm.handleError(response.data.msg)
-        } else {
-          if (Object.keys(response.data).length > 0) {
-            vm.importResponse = response.data
+      if (vm.currentId !== vm.id) {
+        vm.msg = ""
+        vm.importResponse = []
+        vm.currentId = null
+        axios.get('/api/data/item/import/get/' + vm.id).then(response => {
+          if (!response.data.success) {
+            vm.handleError(response.data.msg)
+          } else {
+            vm.currentId = vm.id
+            if (Object.keys(response.data).length > 0) {
+              vm.importResponse = response.data
+            }
+            vm.msg = response.data.msg
           }
-          vm.msg = response.data.msg
-        }
-      }).catch(error => {
-        vm.handleError(error.message)
-      });
+        }).catch(error => {
+          vm.handleError(error.message)
+        })
+      }
     })
   },
 };

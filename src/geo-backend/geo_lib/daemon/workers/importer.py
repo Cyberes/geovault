@@ -45,6 +45,7 @@ def import_worker():
             geofetures = []
             messages = []
             try:
+                # The actual import.
                 geojson_data, kml_conv_messages = kml_to_geojson(item['raw_kml'])
                 messages.extend(kml_conv_messages)
                 geofetures, typing_messages = geojson_to_geofeature(geojson_data)
@@ -61,7 +62,7 @@ def import_worker():
                 messages.append(create_import_log_msg(f'{err_name}: {err_msg}'))
                 log_to_db(msg, level=DatabaseLogLevel.ERROR, user_id=item['user_id'], source=DatabaseLogSource.IMPORT)
                 traceback.print_exc()
-            features = []
+            features = []  # dummy data
             if success:
                 features = [json.loads(x.model_dump_json()) for x in geofetures]
             with CursorFromConnectionFromPool(cursor_factory=RealDictCursor) as cursor:
