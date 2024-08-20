@@ -72,7 +72,7 @@ def fetch_import_queue(request, id):
         if queue.user_id != request.user.id:
             return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
         if not lock_manager.is_locked('data_importqueue', queue.id) and (len(queue.geofeatures) or len(queue.log)):
-            return JsonResponse({'success': True, 'geofeatures': queue.geofeatures, 'log': queue.log}, status=200)
+            return JsonResponse({'success': True, 'geofeatures': queue.geofeatures, 'log': queue.log, 'msg': None}, status=200)
         return JsonResponse({'success': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
     except ImportQueue.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
@@ -88,7 +88,7 @@ def fetch_queued(request):
         item['processing'] = not (len(item['geofeatures']) and len(item['log'])) and lock_manager.is_locked('data_importqueue', item['id'])
         item['feature_count'] = count
         del item['geofeatures']
-    return JsonResponse({'data': data})
+    return JsonResponse({'data': data, 'msg': None})
 
 
 @login_required_401

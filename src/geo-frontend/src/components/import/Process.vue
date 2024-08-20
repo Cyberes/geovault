@@ -7,14 +7,15 @@
 
   <div id="importMessages">
     <h2>Messages</h2>
-    <li v-for="(item, index) in importResponse.log" :key="`item-${index}`">
+    <li v-for="(item, index) in workerLog" :key="`item-${index}`">
       <p class="font-bold">{{ item }}</p>
     </li>
   </div>
   <div>
-    <li v-for="(item, index) in importResponse.geofeatures" :key="`item-${index}`">
+    <li v-for="(item, index) in itemsForUser" :key="`item-${index}`">
+      <h2>{{ item.name }}</h2>
       <pre>
-        {{ parseGeoJson(item) }}
+        {{ item }}
       </pre>
     </li>
   </div>
@@ -45,8 +46,9 @@ export default {
   data() {
     return {
       msg: "",
-      importResponse: {},
       currentId: null,
+      itemsForUser: [],
+      workerLog: []
     }
   },
   mixins: [authMixin],
@@ -73,7 +75,8 @@ export default {
     next(async vm => {
       if (vm.currentId !== vm.id) {
         vm.msg = ""
-        vm.importResponse = []
+        vm.messages = []
+        vm.itemsForUser = []
         vm.currentId = null
         axios.get('/api/data/item/import/get/' + vm.id).then(response => {
           if (!response.data.success) {
@@ -81,9 +84,12 @@ export default {
           } else {
             vm.currentId = vm.id
             if (Object.keys(response.data).length > 0) {
-              vm.importResponse = response.data
+              response.data.geofeatures.forEach((item) => {
+                vm.itemsForUser.push(vm.parseGeoJson(item))
+              })
             }
             vm.msg = response.data.msg
+            vm.workerLog = response.data.log
           }
         }).catch(error => {
           vm.handleError(error.message)
