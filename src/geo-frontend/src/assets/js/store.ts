@@ -1,12 +1,19 @@
 import {createStore} from 'vuex'
 import {UserInfo} from './store-types'
+import {ImportQueueItem} from "@/assets/js/import/import-types";
+
 
 export default createStore({
     state: {
-        userInfo: UserInfo
+        userInfo: UserInfo,
+        importQueue: ImportQueueItem
+
     }, mutations: {
         userInfo(state, payload) {
             state.userInfo = payload
+        },
+        importQueue(state, payload) {
+            state.importQueue = payload
         }
     }, getters: {
         // alertExists: (state) => (message) => {

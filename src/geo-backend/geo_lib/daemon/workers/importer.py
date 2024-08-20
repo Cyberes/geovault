@@ -45,7 +45,6 @@ def import_worker():
             geofetures = []
             messages = []
             try:
-                # The actual import.
                 geojson_data, kml_conv_messages = kml_to_geojson(item['raw_kml'])
                 messages.extend(kml_conv_messages)
                 geofetures, typing_messages = geojson_to_geofeature(geojson_data)

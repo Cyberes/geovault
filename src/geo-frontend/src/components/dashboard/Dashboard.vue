@@ -1,4 +1,6 @@
 <template>
+  <a href="/#/import">Import</a>
+
   <p>username: {{ userInfo.username }}</p>
   <p>id: {{ userInfo.id }}</p>
 </template>

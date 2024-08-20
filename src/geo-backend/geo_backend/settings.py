@@ -134,4 +134,4 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '../geo-frontend/dist/static'),
 ]
 
-APPEND_SLASH = False
+APPEND_SLASH = True

@@ -1,9 +1,9 @@
 import {getCookie} from "./auth.js"
 
 export class UserInfo {
-    private username: String;
-    private id: BigInteger;
-    private csrftoken: String;
+    username: String;
+    id: BigInteger;
+    csrftoken: String;
 
     constructor(username: String, userId: BigInteger) {
         this.username = username

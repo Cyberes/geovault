@@ -15,6 +15,8 @@
   </div>
 
   <div v-if="uploadMsg !== ''" class="w-[90%] m-auto mt-10" v-html="uploadMsg"></div>
+
+  <Importqueue/>
 </template>
 
 <script>
@@ -22,14 +24,17 @@ import {mapState} from "vuex"
 import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {capitalizeFirstLetter} from "@/assets/js/string.js";
+import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
+import {ImportQueueItem} from "@/assets/js/import/import-types.ts"
+import Importqueue from "@/components/import/parts/importqueue.vue";
 
 // TODO: after import, don't disable the upload, instead add the new item to a table at the button and then prompt the user to continue
 
 export default {
   computed: {
-    ...mapState(["userInfo"]),
+    ...mapState(["userInfo", "importQueue"]),
   },
-  components: {},
+  components: {Importqueue},
   mixins: [authMixin],
   data() {
     return {
@@ -39,6 +44,11 @@ export default {
     }
   },
   methods: {
+    async fetchQueueList() {
+      const response = await axios.get(IMPORT_QUEUE_LIST_URL)
+      const ourImportQueue = response.data.data.map((item) => new ImportQueueItem(item))
+      this.$store.commit('importQueue', ourImportQueue)
+    },
     onFileChange(e) {
       this.file = e.target.files[0]
       const fileType = this.file.name.split('.').pop().toLowerCase()
