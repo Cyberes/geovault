@@ -5,8 +5,10 @@ from geo_lib.types.feature import GeoFeatureSupported
 
 
 def generate_auto_tags(feature: GeoFeatureSupported) -> List[str]:
-    tags = []
-    tags.append(f'type:{feature.type.value}')
+    tags = [
+        f'type:{feature.type.value.lower()}'
+    ]
+
     now = datetime.now()
     tags.append(f'year:{now.year}')
     tags.append(f'month:{now.strftime("%B")}')

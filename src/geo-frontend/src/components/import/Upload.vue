@@ -25,7 +25,7 @@ import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {capitalizeFirstLetter} from "@/assets/js/string.js";
 import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
-import {ImportQueueItem} from "@/assets/js/import/import-types.ts"
+import {ImportQueueItem} from "@/assets/js/types/import-types"
 import Importqueue from "@/components/import/parts/importqueue.vue";
 
 // TODO: after import, don't disable the upload, instead add the new item to a table at the button and then prompt the user to continue
@@ -97,7 +97,6 @@ export default {
       vm.file = null
       vm.disableUpload = false
       vm.uploadMsg = ""
-      await vm.fetchQueueList()
     })
   },
   watch: {},

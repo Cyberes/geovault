@@ -1,26 +1,48 @@
 <template>
-  <div class="mb-10">
-    <div>
-      <a href="/#/import/upload">Upload Files</a>
-    </div>
-
-    <Importqueue/>
+  <div>
+    <button @click="fetchQueueList">Refresh</button>
   </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>File Name</th>
+      <th>Features</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr v-for="(item, index) in importQueue" :key="`item-${index}`">
+      <td>
+        <a :href="`/#/import/process/${item.id}`">{{ item.id }}</a>
+      </td>
+      <td>
+        <a :href="`/#/import/process/${item.id}`">{{ item.original_filename }}</a>
+      </td>
+      <td>
+        {{ item.processing === true ? "processing" : item.feature_count }}
+      </td>
+      <td>
+        <button @click="deleteItem(item, index)">Delete</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 </template>
 
 <script>
-import {mapState} from "vuex"
+import {mapState} from "vuex";
 import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
-import {ImportQueueItem} from "@/assets/js/types/import-types"
-import Importqueue from "@/components/import/parts/importqueue.vue";
+import {ImportQueueItem} from "@/assets/js/types/import-types";
 
 export default {
   computed: {
     ...mapState(["userInfo", "importQueue"]),
   },
-  components: {Importqueue},
+  components: {},
   mixins: [authMixin],
   data() {
     return {}
@@ -51,17 +73,12 @@ export default {
         }
     }
   },
-  // async created() {
-  // },
-  // async mounted() {
-  // },
-  // beforeRouteEnter(to, from, next) {
-  //   next(async vm => {
-  //   })
-  // },
-  watch: {},
+  async created() {
+    await this.fetchQueueList()
+  },
 }
 </script>
 
 <style scoped>
+
 </style>

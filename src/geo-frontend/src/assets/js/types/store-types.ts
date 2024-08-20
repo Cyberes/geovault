@@ -1,4 +1,4 @@
-import {getCookie} from "./auth.js"
+import {getCookie} from "../auth.js"
 
 export class UserInfo {
     username: String;

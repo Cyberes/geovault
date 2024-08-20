@@ -1,4 +1,4 @@
-import {UserInfo} from "@/assets/js/store-types.ts";
+import {UserInfo} from "@/assets/js/types/store-types";
 import {getUserInfo} from "@/assets/js/auth.js";
 
 export const authMixin = {

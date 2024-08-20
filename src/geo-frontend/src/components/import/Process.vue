@@ -18,6 +18,11 @@
       </pre>
     </li>
   </div>
+
+  <div class="hidden">
+    <!-- Load the queue to populate it. -->
+    <Importqueue/>
+  </div>
 </template>
 
 <script>
@@ -25,6 +30,9 @@ import {mapState} from "vuex";
 import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {capitalizeFirstLetter} from "@/assets/js/string.js";
+import Importqueue from "@/components/import/parts/importqueue.vue";
+import {GeoFeatureTypeStrings} from "@/assets/js/types/geofeature-strings";
+import {GeoPoint, GeoLineString, GeoPolygon} from "@/assets/js/types/geofeature-types";
 
 // TODO: for each feature, query the DB and check if there is a duplicate. For points that's duplicate coords, for linestrings and polygons that's duplicate points
 // TODO: auto-refresh if still processing
@@ -33,7 +41,7 @@ export default {
   computed: {
     ...mapState(["userInfo"]),
   },
-  components: {},
+  components: {Importqueue},
   data() {
     return {
       msg: "",
@@ -49,7 +57,16 @@ export default {
       this.msg = capitalizeFirstLetter(responseMsg).trim(".") + "."
     },
     parseGeoJson(item) {
-      return item
+      switch (item.type) {
+        case GeoFeatureTypeStrings.Point:
+          return new GeoPoint(item);
+        case GeoFeatureTypeStrings.LineString:
+          return new GeoLineString(item);
+        case GeoFeatureTypeStrings.Polygon:
+          return new GeoPolygon(item);
+        default:
+          throw new Error(`Invalid feature type: ${item.type}`);
+      }
     }
   },
   beforeRouteEnter(to, from, next) {

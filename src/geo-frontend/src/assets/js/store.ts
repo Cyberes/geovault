@@ -1,6 +1,6 @@
 import {createStore} from 'vuex'
-import {UserInfo} from './store-types'
-import {ImportQueueItem} from "@/assets/js/import/import-types";
+import {UserInfo} from './types/store-types'
+import {ImportQueueItem} from "@/assets/js/types/import-types";
 
 
 export default createStore({
