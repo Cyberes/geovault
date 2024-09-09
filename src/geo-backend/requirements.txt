@@ -9,3 +9,4 @@ pydantic==2.7.3
 sqlalchemy==2.0.30
 redis==5.0.5
 async_timeout==4.0.3
+pytz

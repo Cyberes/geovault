@@ -10,7 +10,6 @@ from geo_lib.daemon.database.connection import CursorFromConnectionFromPool
 from geo_lib.daemon.database.locking import DBLockManager
 from geo_lib.daemon.workers.workers_lib.importer.kml import kml_to_geojson
 from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
-from geo_lib.daemon.workers.workers_lib.importer.tagging import generate_auto_tags
 from geo_lib.logging.database import log_to_db, DatabaseLogLevel, DatabaseLogSource
 from geo_lib.time import get_time_ms
 from geo_lib.types.feature import geojson_to_geofeature
@@ -49,8 +48,6 @@ def import_worker():
                 messages.extend(kml_conv_messages)
                 geofetures, typing_messages = geojson_to_geofeature(geojson_data)
                 messages.extend(typing_messages)
-                for feature in geofetures:
-                    feature.tags = generate_auto_tags(feature)
                 success = True
             except Exception as e:
                 err_name = e.__class__.__name__

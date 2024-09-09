@@ -1,15 +1,25 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Union, Tuple
 
+import pytz
 from pydantic import Field, BaseModel
 
 from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
+from geo_lib.geo_backend import SOFTWARE_NAME, SOFTWARE_VERSION
 
 
 class GeoFeatureType(str, Enum):
     POINT = 'Point'
     LINESTRING = 'LineString'
     POLYGON = 'Polygon'
+
+
+class GeoFeatureProperties(BaseModel):
+    tags: List[str] = Field(default_factory=list)
+    created: datetime = datetime.utcnow().replace(tzinfo=pytz.utc)
+    software: str = Field(SOFTWARE_NAME, frozen=True)
+    software_version: str = Field(SOFTWARE_VERSION, frozen=True)
 
 
 class GeoFeature(BaseModel):
@@ -21,8 +31,8 @@ class GeoFeature(BaseModel):
     id: int  # From the database
     type: GeoFeatureType
     description: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
     geometry: List
+    properties: GeoFeatureProperties = Field(default_factory=GeoFeatureProperties)
 
 
 class GeoPoint(GeoFeature):

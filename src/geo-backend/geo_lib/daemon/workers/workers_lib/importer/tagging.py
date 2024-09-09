@@ -10,6 +10,6 @@ def generate_auto_tags(feature: GeoFeatureSupported) -> List[str]:
     ]
 
     now = datetime.now()
-    tags.append(f'year:{now.year}')
-    tags.append(f'month:{now.strftime("%B")}')
+    tags.append(f'import-year:{now.year}')
+    tags.append(f'import-month:{now.strftime("%B")}')
     return [str(x) for x in tags]

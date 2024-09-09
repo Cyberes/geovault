@@ -6,10 +6,14 @@ from django import forms
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
 
 from data.models import ImportQueue
 from geo_lib.daemon.database.locking import DBLockManager
 from geo_lib.daemon.workers.workers_lib.importer.kml import kmz_to_kml
+from geo_lib.daemon.workers.workers_lib.importer.tagging import generate_auto_tags
+from geo_lib.types.feature import GeoPoint, GeoLineString, GeoPolygon
 from geo_lib.website.auth import login_required_401
 
 
@@ -63,12 +67,12 @@ def upload_item(request):
 
 
 @login_required_401
-def fetch_import_queue(request, id):
-    if id is None:
+def fetch_import_queue(request, item_id):
+    if item_id is None:
         return JsonResponse({'success': False, 'msg': 'ID not provided', 'code': 400}, status=400)
     lock_manager = DBLockManager()
     try:
-        queue = ImportQueue.objects.get(id=id)
+        queue = ImportQueue.objects.get(id=item_id)
         if queue.user_id != request.user.id:
             return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
         if not lock_manager.is_locked('data_importqueue', queue.id) and (len(queue.geofeatures) or len(queue.log)):
@@ -80,7 +84,7 @@ def fetch_import_queue(request, id):
 
 @login_required_401
 def fetch_queued(request):
-    user_items = ImportQueue.objects.filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
+    user_items = ImportQueue.objects.exclude(geofeatures__len=0).filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     lock_manager = DBLockManager()
     for i, item in enumerate(data):
@@ -101,6 +105,50 @@ def delete_import_queue(request, id):
         queue.delete()
         return JsonResponse({'success': True})
     return HttpResponse(status=405)
+
+
+@login_required_401
+@csrf_protect  # TODO: put this on all routes
+@require_http_methods(["PUT"])
+def update_imported_item(request, item_id):
+    try:
+        queue = ImportQueue.objects.get(id=item_id)
+    except ImportQueue.DoesNotExist:
+        return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
+    if queue.user_id != request.user.id:
+        return JsonResponse({'success': False, 'msg': 'not authorized to edit this item', 'code': 403}, status=403)
+
+    try:
+        data = json.loads(request.body)
+        if not isinstance(data, list):
+            raise ValueError('Invalid data format. Expected a list.')
+    except (json.JSONDecodeError, ValueError) as e:
+        return JsonResponse({'success': False, 'msg': str(e), 'code': 400}, status=400)
+
+    parsed_data = []
+    for feature in data:
+        match feature['type'].lower():
+            case 'point':
+                c = GeoPoint(**feature)
+            case 'linestring':
+                c = GeoLineString(**feature)
+            case 'polygon':
+                c = GeoPolygon(**feature)
+            case _:
+                continue
+
+        # Generate the tags after the user has made their changes.
+        c.properties.tags = generate_auto_tags(c)
+        parsed_data.append(json.loads(c.model_dump_json()))
+
+    # Erase the geofeatures column
+    queue.geofeatures = []
+
+    # Update the data column with the new data
+    queue.data = parsed_data
+
+    queue.save()
+    return JsonResponse({'success': True, 'msg': 'Item updated successfully'})
 
 
 def _hash_kml(b: str):
