@@ -1,20 +1,27 @@
 <template>
   <div class="mb-10">
-    <p>import data</p>
-    <p>Only KML/KMZ files supported.</p>
-    <p>Be careful not to upload duplicate files of the opposite type. For example, do not upload both
-      <kbd>example.kml</kbd>
-      and <kbd>example.kmz</kbd>. Currently, the system can't detect duplicate cross-file types.</p>
+    <p class="text-lg font-semibold mb-2">Import Data</p>
+    <p class="text-gray-600 mb-2">Only KML/KMZ files supported.</p>
+    <p class="text-gray-600">
+      Be careful not to upload duplicate files of the opposite type. For example, do not upload both
+      <kbd class="bg-gray-200 text-gray-800 px-2 py-1 rounded">example.kml</kbd>
+      and <kbd class="bg-gray-200 text-gray-800 px-2 py-1 rounded">example.kmz</kbd>. Currently, the system can't detect
+      duplicate cross-file types.
+    </p>
   </div>
 
-  <div class="relative w-[90%] m-auto">
-    <div>
-      <input id="uploadInput" :disabled="disableUpload" type="file" @change="onFileChange">
-      <button :disabled="disableUpload" @click="upload">Upload</button>
+  <div class="relative w-[90%] mx-auto">
+    <div class="flex items-center">
+      <input id="uploadInput" :disabled="disableUpload" class="mr-4 px-4 py-2 border border-gray-300 rounded" type="file"
+             @change="onFileChange">
+      <button :disabled="disableUpload" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              @click="upload">
+        Upload
+      </button>
     </div>
   </div>
 
-  <div v-if="uploadMsg !== ''" class="w-[90%] m-auto mt-10" v-html="uploadMsg"></div>
+  <div v-if="uploadMsg !== ''" class="w-[90%] mx-auto mt-10" v-html="uploadMsg"></div>
 
   <Importqueue/>
 </template>
@@ -66,7 +73,7 @@ export default {
       formData.append('file', this.file)
       try {
         this.disableUpload = true
-        const response = await axios.post('/api/data/item/import/upload/', formData, {
+        const response = await axios.post('/api/data/item/import/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'X-CSRFToken': this.userInfo.csrftoken

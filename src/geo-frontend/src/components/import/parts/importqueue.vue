@@ -1,30 +1,30 @@
 <template>
-  <div>
-    <button @click="fetchQueueList">Refresh</button>
+  <div class="mt-4">
+    <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" @click="fetchQueueList">Refresh</button>
   </div>
 
-  <table>
+  <table class="mt-6 w-full border-collapse">
     <thead>
-    <tr>
-      <th>ID</th>
-      <th>File Name</th>
-      <th>Features</th>
-      <th></th>
+    <tr class="bg-gray-100">
+      <th class="px-4 py-2 text-left">File Name</th>
+      <th class="px-4 py-2 text-left">Features</th>
+      <th class="px-4 py-2"></th>
     </tr>
     </thead>
     <tbody>
-    <tr v-for="(item, index) in importQueue" :key="`item-${index}`">
-      <td>
-        <a :href="`/#/import/process/${item.id}`">{{ item.id }}</a>
+    <tr v-for="(item, index) in importQueue" :key="`item-${index}`" class="border-t">
+      <td class="px-4 py-2">
+        <a :href="`/#/import/process/${item.id}`" class="text-blue-500 hover:text-blue-700">{{
+            item.original_filename
+          }}</a>
       </td>
-      <td>
-        <a :href="`/#/import/process/${item.id}`">{{ item.original_filename }}</a>
-      </td>
-      <td>
+      <td class="px-4 py-2">
         {{ item.processing === true ? "processing" : item.feature_count }}
       </td>
-      <td>
-        <button @click="deleteItem(item, index)">Delete</button>
+      <td class="px-4 py-2">
+        <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" @click="deleteItem(item, index)">
+          Delete
+        </button>
       </td>
     </tr>
     </tbody>

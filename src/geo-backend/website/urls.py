@@ -1,5 +1,5 @@
 """
-URL configuration for account project.
+URL configuration for website project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
@@ -18,11 +18,11 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path, re_path
 
-from account.views import index
+from website.views import index
 
 urlpatterns = [
     path('', index),
-    re_path(r"^account/", include("django.contrib.auth.urls")),
+    re_path(r"^website/", include("django.contrib.auth.urls")),
     path('admin/', admin.site.urls),
     path('', include("users.urls")),
     path('api/data/', include("data.urls"))

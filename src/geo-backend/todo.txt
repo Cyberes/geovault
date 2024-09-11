@@ -1,0 +1,7 @@
+1. Style main import page
+2. Fix created field reset on edit imported
+3. Implement refresh on edit imported
+4. Style messages/log on edit imported
+5. Implement upload working animation on edit imported
+
+- For tracks, set the created date to the timestamp of the first point in the track

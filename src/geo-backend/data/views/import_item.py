@@ -72,19 +72,19 @@ def fetch_import_queue(request, item_id):
         return JsonResponse({'success': False, 'msg': 'ID not provided', 'code': 400}, status=400)
     lock_manager = DBLockManager()
     try:
-        queue = ImportQueue.objects.get(id=item_id)
-        if queue.user_id != request.user.id:
+        item = ImportQueue.objects.get(id=item_id)
+        if item.user_id != request.user.id:
             return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
-        if not lock_manager.is_locked('data_importqueue', queue.id) and (len(queue.geofeatures) or len(queue.log)):
-            return JsonResponse({'success': True, 'geofeatures': queue.geofeatures, 'log': queue.log, 'msg': None}, status=200)
+        if not lock_manager.is_locked('data_importqueue', item.id) and (len(item.geofeatures) or len(item.log)):
+            return JsonResponse({'success': True, 'geofeatures': item.geofeatures, 'log': item.log, 'msg': None, 'original_filename': item.original_filename}, status=200)
         return JsonResponse({'success': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
     except ImportQueue.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
 
 
 @login_required_401
-def fetch_queued(request):
-    user_items = ImportQueue.objects.exclude(geofeatures__len=0).filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
+def fetch_import_waiting(request):
+    user_items = ImportQueue.objects.exclude(data__contains=[]).filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     lock_manager = DBLockManager()
     for i, item in enumerate(data):
@@ -96,7 +96,25 @@ def fetch_queued(request):
 
 
 @login_required_401
-def delete_import_queue(request, id):
+def fetch_import_history(request):
+    user_items = ImportQueue.objects.filter(geofeatures__contains=[], user=request.user).values('id', 'original_filename', 'timestamp')
+    data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
+    return JsonResponse({'data': data})
+
+
+@login_required_401
+def fetch_import_history_item(request, item_id: int):
+    item = ImportQueue.objects.get(id=item_id)
+    if item.user_id != request.user.id:
+        return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
+
+    response = HttpResponse(item.raw_kml, content_type='application/octet-stream')
+    response['Content-Disposition'] = 'attachment; filename="%s"' % item.original_filename
+    return response
+
+
+@login_required_401
+def delete_import_item(request, id):
     if request.method == 'DELETE':
         try:
             queue = ImportQueue.objects.get(id=id)
@@ -110,7 +128,7 @@ def delete_import_queue(request, id):
 @login_required_401
 @csrf_protect  # TODO: put this on all routes
 @require_http_methods(["PUT"])
-def update_imported_item(request, item_id):
+def update_import_item(request, item_id):
     try:
         queue = ImportQueue.objects.get(id=item_id)
     except ImportQueue.DoesNotExist:

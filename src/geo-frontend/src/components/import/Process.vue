@@ -1,20 +1,33 @@
 <template>
-  <div v-if="msg !== ''">
-    <p class="font-bold">{{ msg }}</p>
+  <div class="prose mb-10">
+    <h1 class="mb-1">Process Import</h1>
+    <h2 class="mt-0">{{ originalFilename }}</h2>
   </div>
+
+  <div v-if="msg !== '' && msg != null">
+    <div class="bg-red-500 p-4 rounded">
+      <p class="font-bold text-white">{{ msg }}</p>
+    </div>
+  </div>
+
 
   <!-- TODO: loading indicator -->
 
-  <div id="importMessages">
-    <h2>Messages</h2>
-    <li v-for="(item, index) in workerLog" :key="`item-${index}`">
-      <p class="font-bold">{{ item }}</p>
-    </li>
+  <div v-if="originalFilename != null" id="importLog"
+       class="w-full my-10 mx-auto overflow-auto h-32 bg-white shadow rounded-lg p-4">
+    <h2 class="text-lg font-semibold text-gray-700 mb-2">Logs</h2>
+    <hr class="mb-4 border-t border-gray-200">
+    <ul class="space-y-2">
+      <li v-for="(item, index) in workerLog" :key="`item-${index}`" class="border-b border-gray-200 last:border-b-0">
+        <p class="text-sm font-bold text-gray-600">{{ item }}</p>
+      </li>
+    </ul>
   </div>
+
 
   <div>
     <ul class="space-y-4">
-      <li v-for="(item, index) in itemsForUser" :key="`item-${index}`" class="bg-white shadow-md rounded-md p-4">
+      <li v-for="(item, index) in itemsForUser" :key="`item-${index}`" class="bg-white shadow rounded-md p-4">
         <div class="mb-4">
           <label class="block text-gray-700 font-bold mb-2">Name:</label>
           <div class="flex items-center">
@@ -35,7 +48,7 @@
             </button>
           </div>
         </div>
-        <div class="">
+        <div>
           <label class="block text-gray-700 font-bold mb-2">Created:</label>
           <div class="flex items-center">
             <flat-pickr :config="flatpickrConfig" :value="item.properties.created"
@@ -72,9 +85,11 @@
     </ul>
   </div>
 
-  <button class="m-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-          @click="saveChanges">Save
-  </button>
+  <div v-if="itemsForUser.length > 0">
+    <button class="m-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            @click="saveChanges">Save
+    </button>
+  </div>
 
 
   <div class="hidden">
@@ -107,6 +122,7 @@ export default {
     return {
       msg: "",
       currentId: null,
+      originalFilename: null,
       itemsForUser: [],
       originalItems: [],
       workerLog: [],
@@ -114,7 +130,7 @@ export default {
         enableTime: true,
         time_24hr: true,
         dateFormat: 'Y-m-d H:i',
-        timezone: 'UTC',
+        // timezone: 'UTC',
       },
     }
   },
@@ -200,6 +216,7 @@ export default {
           } else {
             vm.currentId = vm.id
             if (Object.keys(response.data).length > 0) {
+              vm.originalFilename = response.data.original_filename
               response.data.geofeatures.forEach((item) => {
                 vm.itemsForUser.push(vm.parseGeoJson(item))
               })

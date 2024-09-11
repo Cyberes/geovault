@@ -1,10 +1,34 @@
 <template>
   <div class="mb-10">
     <div>
-      <a href="/#/import/upload">Upload Files</a>
+      <a class="text-blue-500 hover:text-blue-700" href="/#/import/upload">Upload Files</a>
     </div>
 
     <Importqueue/>
+
+    <div class="prose mt-10">
+      <h3>Import History</h3>
+    </div>
+    <table class="mt-6 w-full border-collapse">
+      <thead>
+      <tr class="bg-gray-100">
+        <th class="px-4 py-2 text-left">File Name</th>
+        <th class="px-4 py-2">Date/Time Imported</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="(item, index) in history" :key="`history-${index}`" class="border-t">
+        <td class="px-4 py-2">
+          <a :href="`${IMPORT_HISTORY_URL()}/${item.id}`" class="text-blue-500 hover:text-blue-700">{{
+              item.original_filename
+            }}</a>
+        </td>
+        <td class="px-4 py-2 text-center">
+          {{ item.timestamp }}
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -12,8 +36,7 @@
 import {mapState} from "vuex"
 import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
-import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
-import {ImportQueueItem} from "@/assets/js/types/import-types"
+import {IMPORT_HISTORY_URL} from "@/assets/js/import/url.js";
 import Importqueue from "@/components/import/parts/importqueue.vue";
 
 export default {
@@ -23,36 +46,22 @@ export default {
   components: {Importqueue},
   mixins: [authMixin],
   data() {
-    return {}
-  },
-  methods: {
-    async fetchQueueList() {
-      const response = await axios.get(IMPORT_QUEUE_LIST_URL)
-      const ourImportQueue = response.data.data.map((item) => new ImportQueueItem(item))
-      this.$store.commit('importQueue', ourImportQueue)
-    },
-    async deleteItem(item, index) {
-      if (window.confirm(`Delete "${item.original_filename}" (#${item.id})`))
-        try {
-          this.importQueue.splice(index, 1)
-          // TODO: add a message popup when delete is completed
-          const response = await axios.delete('/api/data/item/import/delete/' + item.id, {
-            headers: {
-              'X-CSRFToken': this.userInfo.csrftoken
-            }
-          })
-          if (!response.data.success) {
-            throw new Error("server reported failure")
-          }
-          await this.fetchQueueList()
-        } catch (error) {
-          alert(`Failed to delete ${item.id}: ${error.message}`)
-          this.importQueue.splice(index, 0, item)
-        }
+    return {
+      history: [],
     }
   },
-  // async created() {
-  // },
+  methods: {
+    IMPORT_HISTORY_URL() {
+      return IMPORT_HISTORY_URL
+    },
+    async fetchHistory() {
+      const response = await axios.get(IMPORT_HISTORY_URL)
+      this.history = response.data.data
+    },
+  },
+  async created() {
+    await this.fetchHistory()
+  },
   // async mounted() {
   // },
   // beforeRouteEnter(to, from, next) {

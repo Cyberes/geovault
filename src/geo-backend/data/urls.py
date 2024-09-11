@@ -1,11 +1,13 @@
 from django.urls import path
 
-from data.views.import_item import upload_item, fetch_import_queue, fetch_queued, delete_import_queue, update_imported_item
+from data.views.import_item import upload_item, fetch_import_queue, fetch_import_waiting, delete_import_item, update_import_item, fetch_import_history, fetch_import_history_item
 
 urlpatterns = [
-    path('item/import/upload/', upload_item, name='upload_file'),
-    path('item/import/get/<int:item_id>', fetch_import_queue, name='fetch_import_queue'),
-    path('item/import/get/mine', fetch_queued, name='fetch_queued'),
-    path('item/import/delete/<int:id>', delete_import_queue, name='delete_import_queue'),
-    path('item/import/update/<int:item_id>', update_imported_item),
+    path('item/import/upload', upload_item),
+    path('item/import/get/<int:item_id>', fetch_import_queue),
+    path('item/import/get', fetch_import_waiting),
+    path('item/import/get/history', fetch_import_history),
+    path('item/import/get/history/<int:item_id>', fetch_import_history_item),
+    path('item/import/delete/<int:id>', delete_import_item),
+    path('item/import/update/<int:item_id>', update_import_item),
 ]
