@@ -1,5 +1,5 @@
 """
-URL configuration for geo_backend project.
+URL configuration for account project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
@@ -18,7 +18,7 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path, re_path
 
-from geo_backend.views import index
+from account.views import index
 
 urlpatterns = [
     path('', index),
