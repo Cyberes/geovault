@@ -19,12 +19,12 @@ const routes = [
     {
         path: '/import/upload',
         name: 'Import Data',
-        component: () => import('./components/import/Upload.vue'),
+        component: () => import('./components/import/ImportUpload.vue'),
     },
     {
         path: '/import/process/:id',
         name: 'Process Data',
-        component: () => import('./components/import/Process.vue'),
+        component: () => import('./components/import/ImportProcess.vue'),
         props: true
     }
 ]
