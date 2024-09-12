@@ -1,9 +1,9 @@
 <template>
   <div class="prose mb-10">
     <h1 class="mb-1">Process Import</h1>
-    <h2 class="mt-0">{{ originalFilename }}</h2>
+    <h2 v-if="originalFilename != null" class="mt-0">{{ originalFilename }}</h2>
+    <h2 v-else class="mt-0 invisible">loading...</h2>
   </div>
-
   <div v-if="msg !== '' && msg != null">
     <div class="bg-red-500 p-4 rounded">
       <p class="font-bold text-white">{{ msg }}</p>
@@ -11,18 +11,19 @@
   </div>
 
 
-  <!-- TODO: loading indicator -->
-
-  <div v-if="originalFilename != null" id="importLog"
+  <div id="importLog"
        class="w-full my-10 mx-auto overflow-auto h-32 bg-white shadow rounded-lg p-4">
     <h2 class="text-lg font-semibold text-gray-700 mb-2">Logs</h2>
     <hr class="mb-4 border-t border-gray-200">
     <ul class="space-y-2">
       <li v-for="(item, index) in workerLog" :key="`item-${index}`" class="border-b border-gray-200 last:border-b-0">
-        <p class="text-sm font-bold text-gray-600">{{ item }}</p>
+        <p class="text-sm">{{ item }}</p>
       </li>
     </ul>
   </div>
+
+
+  <Loader v-if="originalFilename == null"/>
 
 
   <div>
@@ -109,15 +110,16 @@ import {GeoPoint, GeoLineString, GeoPolygon} from "@/assets/js/types/geofeature-
 import {getCookie} from "@/assets/js/auth.js";
 import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
+import Loader from "@/components/parts/Loader.vue";
 
 // TODO: for each feature, query the DB and check if there is a duplicate. For points that's duplicate coords, for linestrings and polygons that's duplicate points
-// TODO: auto-refresh if still processing
+// TODO: redo the entire log feature to include local timestamps
 
 export default {
   computed: {
     ...mapState(["userInfo"]),
   },
-  components: {Importqueue, flatPickr},
+  components: {Loader, Importqueue, flatPickr},
   data() {
     return {
       msg: "",
@@ -130,7 +132,6 @@ export default {
         enableTime: true,
         time_24hr: true,
         dateFormat: 'Y-m-d H:i',
-        // timezone: 'UTC',
       },
     }
   },
@@ -189,7 +190,7 @@ export default {
         }
       }).then(response => {
         if (response.data.success) {
-          this.msg = 'Changes saved successfully';
+          this.msg = 'Changes saved successfully.';
           window.alert(this.msg);
         } else {
           this.msg = 'Error saving changes: ' + response.data.msg;
@@ -203,35 +204,44 @@ export default {
   }
   ,
   beforeRouteEnter(to, from, next) {
+    let ready = false
     next(async vm => {
       if (vm.currentId !== vm.id) {
         vm.msg = ""
         vm.messages = []
-        vm.itemsForUser = []
-        vm.originalItems = []
-        vm.currentId = null
-        axios.get('/api/data/item/import/get/' + vm.id).then(response => {
-          if (!response.data.success) {
-            vm.handleError(response.data.msg)
-          } else {
-            vm.currentId = vm.id
-            if (Object.keys(response.data).length > 0) {
-              vm.originalFilename = response.data.original_filename
-              response.data.geofeatures.forEach((item) => {
-                vm.itemsForUser.push(vm.parseGeoJson(item))
-              })
-              vm.originalItems = JSON.parse(JSON.stringify(vm.itemsForUser))
+        while (!ready) {
+          vm.itemsForUser = []
+          vm.originalItems = []
+          vm.currentId = null
+          try {
+            const response = await axios.get('/api/data/item/import/get/' + vm.id)
+            if (!response.data.success) {
+              vm.handleError(response.data.msg)
+            } else {
+              vm.currentId = vm.id
+              if (Object.keys(response.data).length > 0) {
+                vm.originalFilename = response.data.original_filename
+                response.data.geofeatures.forEach((item) => {
+                  vm.itemsForUser.push(vm.parseGeoJson(item))
+                })
+                vm.originalItems = JSON.parse(JSON.stringify(vm.itemsForUser))
+              }
+              if (!response.data.processing) {
+                vm.workerLog.push(response.data.msg)
+                vm.workerLog.concat(response.data.log)
+                ready = true
+              } else {
+                vm.workerLog = [`${new Date().toISOString()} -- uploaded data still processing`]
+                await new Promise(r => setTimeout(r, 1000));
+              }
             }
-            vm.msg = response.data.msg
-            vm.workerLog = response.data.log
+          } catch (error) {
+            vm.handleError(error.message)
           }
-        }).catch(error => {
-          vm.handleError(error.message)
-        })
+        }
       }
     })
-  }
-  ,
+  },
 }
 
 </script>

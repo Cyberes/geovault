@@ -14,7 +14,7 @@ from geo_lib.logging.database import log_to_db, DatabaseLogLevel, DatabaseLogSou
 from geo_lib.time import get_time_ms
 from geo_lib.types.feature import geojson_to_geofeature
 
-_SQL_GET_UNPROCESSED_ITEMS = "SELECT * FROM public.data_importqueue WHERE geofeatures = '{}'::jsonb ORDER BY id ASC"
+_SQL_GET_UNPROCESSED_ITEMS = "SELECT * FROM public.data_importqueue WHERE geofeatures = '[]'::jsonb ORDER BY id ASC"
 _SQL_INSERT_PROCESSED_ITEM = "UPDATE public.data_importqueue SET geofeatures = %s, log = %s WHERE id = %s"
 _SQL_DELETE_ITEM = "DELETE FROM public.data_importqueue WHERE id = %s"
 

@@ -74,17 +74,17 @@ def fetch_import_queue(request, item_id):
     try:
         item = ImportQueue.objects.get(id=item_id)
         if item.user_id != request.user.id:
-            return JsonResponse({'success': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
+            return JsonResponse({'success': False, 'processing': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
         if not lock_manager.is_locked('data_importqueue', item.id) and (len(item.geofeatures) or len(item.log)):
-            return JsonResponse({'success': True, 'geofeatures': item.geofeatures, 'log': item.log, 'msg': None, 'original_filename': item.original_filename}, status=200)
-        return JsonResponse({'success': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
+            return JsonResponse({'success': True, 'processing': False, 'geofeatures': item.geofeatures, 'log': item.log, 'msg': None, 'original_filename': item.original_filename}, status=200)
+        return JsonResponse({'success': True, 'processing': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
     except ImportQueue.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
 
 
 @login_required_401
 def fetch_import_waiting(request):
-    user_items = ImportQueue.objects.exclude(data__contains=[]).filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
+    user_items = ImportQueue.objects.exclude(data__contains='[]').filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     lock_manager = DBLockManager()
     for i, item in enumerate(data):
@@ -97,7 +97,7 @@ def fetch_import_waiting(request):
 
 @login_required_401
 def fetch_import_history(request):
-    user_items = ImportQueue.objects.filter(geofeatures__contains=[], user=request.user).values('id', 'original_filename', 'timestamp')
+    user_items = ImportQueue.objects.filter(geofeatures__contains='[]', user=request.user).values('id', 'original_filename', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     return JsonResponse({'data': data})
 
