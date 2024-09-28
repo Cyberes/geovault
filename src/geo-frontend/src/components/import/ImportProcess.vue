@@ -11,17 +11,18 @@
   </div>
 
 
-  <div id="importLog"
-       class="w-full my-10 mx-auto overflow-auto h-32 bg-white shadow rounded-lg p-4">
+  <div id="importLog" class="w-full my-10 mx-auto bg-white shadow rounded-lg p-4">
     <h2 class="text-lg font-semibold text-gray-700 mb-2">Logs</h2>
     <hr class="mb-4 border-t border-gray-200">
-    <ul class="space-y-2">
-      <li v-for="(item, index) in workerLog" :key="`item-${index}`" class="border-b border-gray-200 last:border-b-0">
-        <p class="text-sm">{{ item }}</p>
-      </li>
-    </ul>
+    <div class="h-32 overflow-auto">
+      <ul class="space-y-2">
+        <li v-for="(item, index) in workerLog" :key="`logitem-${index}`"
+            class="border-b border-gray-200 last:border-b-0">
+          <p class="text-sm">{{ item.timestamp }} - {{ item.msg }}</p>
+        </li>
+      </ul>
+    </div>
   </div>
-
 
   <Loader v-if="originalFilename == null"/>
 
@@ -204,6 +205,7 @@ export default {
   }
   ,
   beforeRouteEnter(to, from, next) {
+    const now = new Date().toISOString()
     let ready = false
     next(async vm => {
       if (vm.currentId !== vm.id) {
@@ -227,11 +229,13 @@ export default {
                 vm.originalItems = JSON.parse(JSON.stringify(vm.itemsForUser))
               }
               if (!response.data.processing) {
-                vm.workerLog.push(response.data.msg)
-                vm.workerLog.concat(response.data.log)
+                vm.workerLog = vm.workerLog.concat(response.data.log)
+                if (response.data.msg != null && response.data.msg.length > 0) {
+                  vm.workerLog.push({timestamp: now, msg: response.data.msg})
+                }
                 ready = true
               } else {
-                vm.workerLog = [`${new Date().toISOString()} -- uploaded data still processing`]
+                vm.workerLog = [{timestamp: now, msg: "uploaded data still processing"}]
                 await new Promise(r => setTimeout(r, 1000));
               }
             }

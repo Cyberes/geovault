@@ -1,5 +1,29 @@
-from datetime import datetime
+import datetime
+import json
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
-def create_import_log_msg(msg: str):
-    return datetime.now().isoformat(), msg
+class ImportLogMsg(BaseModel):
+    timestamp: Optional[str] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    msg: str
+
+
+class ImportLog:
+    def __init__(self):
+        self._messages: List[ImportLogMsg] = []
+
+    def add(self, msg: str):
+        assert isinstance(msg, str)
+        self._messages.append(ImportLogMsg(msg=msg))
+
+    def extend(self, msgs: 'ImportLog'):
+        for msg in msgs.get():
+            self._messages.append(msg)
+
+    def get(self) -> List[ImportLogMsg]:
+        return self._messages.copy()
+
+    def json(self) -> str:
+        return json.dumps([x.model_dump() for x in self._messages])

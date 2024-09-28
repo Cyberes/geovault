@@ -5,7 +5,7 @@ from typing import Optional, List, Union, Tuple
 import pytz
 from pydantic import Field, BaseModel
 
-from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
+from geo_lib.daemon.workers.workers_lib.importer.logging import ImportLog
 from geo_lib.geo_backend import SOFTWARE_NAME, SOFTWARE_VERSION
 
 
@@ -53,9 +53,9 @@ class GeoPolygon(GeoFeature):
 GeoFeatureSupported = Union[GeoPoint, GeoLineString, GeoPolygon]
 
 
-def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], List[str]]:
+def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], ImportLog]:
     result = []
-    log = []
+    import_log = ImportLog()
     for item in geojson['features']:
         match item['geometry']['type'].lower():
             case 'point':
@@ -65,7 +65,7 @@ def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], Lis
             case 'polygon':
                 c = GeoPolygon
             case _:
-                log.append(create_import_log_msg(f'Feature named "{item["properties"]["title"]}" had unsupported type "{item["geometry"]["type"]}".'))
+                import_log.add(f'Feature named "{item["properties"]["title"]}" had unsupported type "{item["geometry"]["type"]}".')
                 continue
         result.append(c(
             name=item['properties']['title'],
@@ -75,4 +75,4 @@ def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], Lis
             geometry=item['geometry']['coordinates']
         ))
 
-    return result, log
+    return result, import_log

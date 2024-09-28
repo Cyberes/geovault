@@ -8,7 +8,7 @@ import kml2geojson
 from dateparser import parse
 from geojson import Point, LineString, Polygon, FeatureCollection
 
-from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
+from geo_lib.daemon.workers.workers_lib.importer.logging import ImportLog
 from geo_lib.types.geojson import GeojsonRawProperty
 
 
@@ -26,23 +26,21 @@ def kmz_to_kml(kml_bytes: Union[str, bytes]) -> str:
         return kml_bytes.decode('utf-8')
 
 
-def kml_to_geojson(kml_bytes) -> Tuple[dict, list]:
+def kml_to_geojson(kml_bytes) -> Tuple[dict, ImportLog]:
     # TODO: preserve KML object styling, such as color and opacity
     doc = kmz_to_kml(kml_bytes)
-
     converted_kml = kml2geojson.main.convert(io.BytesIO(doc.encode('utf-8')))
-
-    features, messages = process_feature(converted_kml)
+    features, import_log = process_feature(converted_kml)
     data = {
         'type': 'FeatureCollection',
         'features': features
     }
-    return load_geojson_type(data), messages
+    return load_geojson_type(data), import_log
 
 
-def process_feature(converted_kml):
+def process_feature(converted_kml) -> Tuple[list, ImportLog]:
     features = []
-    messages = []
+    import_log = ImportLog()
     for feature in converted_kml[0]['features']:
         if feature['geometry']['type'] in ['Point', 'LineString', 'Polygon']:
             if feature['properties'].get('times'):
@@ -53,8 +51,8 @@ def process_feature(converted_kml):
             features.append(feature)
         else:
             # Log the error
-            messages.append(create_import_log_msg(f'Feature type {feature["properties"]["type"]} not supported'))
-    return features, messages
+            import_log.add(f'Feature type {feature["properties"]["type"]} not supported')
+    return features, import_log
 
 
 def load_geojson_type(data: dict) -> dict:

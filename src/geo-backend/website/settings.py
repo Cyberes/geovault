@@ -135,3 +135,7 @@ STATICFILES_DIRS = [
 ]
 
 APPEND_SLASH = True
+
+LOGIN_URL = '/account/login'
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']

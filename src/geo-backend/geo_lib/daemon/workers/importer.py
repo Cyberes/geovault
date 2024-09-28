@@ -9,7 +9,7 @@ from psycopg2.extras import RealDictCursor
 from geo_lib.daemon.database.connection import CursorFromConnectionFromPool
 from geo_lib.daemon.database.locking import DBLockManager
 from geo_lib.daemon.workers.workers_lib.importer.kml import kml_to_geojson
-from geo_lib.daemon.workers.workers_lib.importer.logging import create_import_log_msg
+from geo_lib.daemon.workers.workers_lib.importer.logging import ImportLog
 from geo_lib.logging.database import log_to_db, DatabaseLogLevel, DatabaseLogSource
 from geo_lib.time import get_time_ms
 from geo_lib.types.feature import geojson_to_geofeature
@@ -42,12 +42,13 @@ def import_worker():
             start = get_time_ms()
             success = False
             geofetures = []
-            messages = []
+            import_log = ImportLog()
+            import_log.add('Processing start')
             try:
                 geojson_data, kml_conv_messages = kml_to_geojson(item['raw_kml'])
-                messages.extend(kml_conv_messages)
+                import_log.extend(kml_conv_messages)
                 geofetures, typing_messages = geojson_to_geofeature(geojson_data)
-                messages.extend(typing_messages)
+                import_log.extend(typing_messages)
                 success = True
             except Exception as e:
                 err_name = e.__class__.__name__
@@ -55,15 +56,17 @@ def import_worker():
                 if hasattr(e, 'message'):
                     err_msg = e.message
                 msg = f'Failed to import item #{item["id"]} "{item["original_filename"]}", encountered {err_name}. {err_msg}'
-                messages.append(create_import_log_msg(f'{err_name}: {err_msg}'))
+                import_log.add(f'{err_name}: {err_msg}')
                 log_to_db(msg, level=DatabaseLogLevel.ERROR, user_id=item['user_id'], source=DatabaseLogSource.IMPORT)
                 traceback.print_exc()
             features = []  # dummy data
             if success:
                 features = [json.loads(x.model_dump_json()) for x in geofetures]
+            time.sleep(1)
+            import_log.add(f'Processing finished {"un" if not success else ""}successfully')
             with CursorFromConnectionFromPool(cursor_factory=RealDictCursor) as cursor:
                 data = json.dumps(features)
-                cursor.execute(_SQL_INSERT_PROCESSED_ITEM, (data, json.dumps(messages), item['id']))
+                cursor.execute(_SQL_INSERT_PROCESSED_ITEM, (data, import_log.json(), item['id']))
             lock_manager.unlock_row('data_importqueue', item['id'])
             _logger.info(f'IMPORT: processed #{item["id"]} in {round((get_time_ms() - start) / 1000, 2)} seconds -- {worker_id}')
 
