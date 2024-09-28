@@ -209,12 +209,13 @@ export default {
     let ready = false
     next(async vm => {
       if (vm.currentId !== vm.id) {
-        vm.msg = ""
-        vm.messages = []
         while (!ready) {
+          vm.msg = ""
+          vm.currentId = null
+          vm.originalFilename = null
           vm.itemsForUser = []
           vm.originalItems = []
-          vm.currentId = null
+          vm.workerLog = []
           try {
             const response = await axios.get('/api/data/item/import/get/' + vm.id)
             if (!response.data.success) {
