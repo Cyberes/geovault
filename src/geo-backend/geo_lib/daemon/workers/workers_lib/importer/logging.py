@@ -1,12 +1,13 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ImportLogMsg(BaseModel):
-    timestamp: Optional[str] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    timestamp: Optional[str] = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
     msg: str
 
 

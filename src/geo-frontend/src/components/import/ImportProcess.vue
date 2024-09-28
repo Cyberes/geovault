@@ -88,8 +88,13 @@
   </div>
 
   <div v-if="itemsForUser.length > 0">
-    <button class="m-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+    <button :disabled="lockButtons"
+            class="m-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-bold py-2 px-4 rounded"
             @click="saveChanges">Save
+    </button>
+    <button :disabled="lockButtons"
+            class="m-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold py-2 px-4 rounded"
+            @click="performImport">Import
     </button>
   </div>
 
@@ -129,6 +134,7 @@ export default {
       itemsForUser: [],
       originalItems: [],
       workerLog: [],
+      lockButtons: false,
       flatpickrConfig: {
         enableTime: true,
         time_24hr: true,
@@ -184,38 +190,69 @@ export default {
       this.itemsForUser[index].properties.created = selectedDates[0];
     },
     saveChanges() {
-      const csrftoken = getCookie('csrftoken');
+      this.lockButtons = true
+      const csrftoken = getCookie('csrftoken')
       axios.put('/api/data/item/import/update/' + this.id, this.itemsForUser, {
         headers: {
           'X-CSRFToken': csrftoken
         }
       }).then(response => {
         if (response.data.success) {
-          this.msg = 'Changes saved successfully.';
-          window.alert(this.msg);
+          window.alert(response.data.msg);
         } else {
           this.msg = 'Error saving changes: ' + response.data.msg;
           window.alert(this.msg);
         }
+        this.lockButtons = false
       }).catch(error => {
         this.msg = 'Error saving changes: ' + error.message;
         window.alert(this.msg);
       });
     },
-  }
-  ,
+    async performImport() {
+      this.lockButtons = true
+      const csrftoken = getCookie('csrftoken')
+
+      // Save changes first.
+      await axios.put('/api/data/item/import/update/' + this.id, this.itemsForUser, {
+        headers: {
+          'X-CSRFToken': csrftoken
+        }
+      })
+
+      axios.post('/api/data/item/import/perform/' + this.id, [], {
+        headers: {
+          'X-CSRFToken': csrftoken
+        }
+      }).then(response => {
+        if (response.data.success) {
+          this.$store.dispatch('refreshImportQueue')
+          window.alert(response.data.msg);
+        } else {
+          this.msg = 'Error performing import: ' + response.data.msg;
+          window.alert(this.msg);
+        }
+        this.lockButtons = false
+      }).catch(error => {
+        this.msg = 'Error performing import: ' + error.message;
+        window.alert(this.msg);
+        this.lockButtons = false
+      });
+    },
+  },
   beforeRouteEnter(to, from, next) {
     const now = new Date().toISOString()
     let ready = false
     next(async vm => {
       if (vm.currentId !== vm.id) {
+        vm.msg = ""
+        vm.currentId = null
+        vm.originalFilename = null
+        vm.itemsForUser = []
+        vm.originalItems = []
+        vm.workerLog = []
+        vm.lockButtons = false
         while (!ready) {
-          vm.msg = ""
-          vm.currentId = null
-          vm.originalFilename = null
-          vm.itemsForUser = []
-          vm.originalItems = []
-          vm.workerLog = []
           try {
             const response = await axios.get('/api/data/item/import/get/' + vm.id)
             if (!response.data.success) {
@@ -246,7 +283,8 @@ export default {
         }
       }
     })
-  },
+  }
+  ,
 }
 
 </script>

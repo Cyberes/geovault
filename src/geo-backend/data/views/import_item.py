@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
-from data.models import ImportQueue
+from data.models import ImportQueue, FeatureStore
 from geo_lib.daemon.database.locking import DBLockManager
 from geo_lib.daemon.workers.workers_lib.importer.kml import kmz_to_kml
 from geo_lib.daemon.workers.workers_lib.importer.tagging import generate_auto_tags
@@ -38,7 +38,7 @@ def upload_item(request):
 
             try:
                 kml_doc = kmz_to_kml(file_data)
-            except Exception as e:
+            except:
                 print(traceback.format_exc())  # TODO: logging
                 return JsonResponse({'success': False, 'msg': 'failed to parse KML/KMZ', 'id': None}, status=400)
 
@@ -50,7 +50,6 @@ def upload_item(request):
                 import_queue = ImportQueue.objects.get(
                     raw_kml=kml_doc,
                     raw_kml_hash=_hash_kml(kml_doc),
-                    # original_filename=file_name,
                     user=request.user
                 )
             msg = 'upload successful'
@@ -73,8 +72,11 @@ def fetch_import_queue(request, item_id):
     lock_manager = DBLockManager()
     try:
         item = ImportQueue.objects.get(id=item_id)
+
         if item.user_id != request.user.id:
             return JsonResponse({'success': False, 'processing': False, 'msg': 'not authorized to view this item', 'code': 403}, status=400)
+        if item.imported:
+            return JsonResponse({'success': False, 'processing': False, 'msg': 'item already imported', 'code': 400}, status=400)
         if not lock_manager.is_locked('data_importqueue', item.id) and (len(item.geofeatures) or len(item.log)):
             return JsonResponse({'success': True, 'processing': False, 'geofeatures': item.geofeatures, 'log': item.log, 'msg': None, 'original_filename': item.original_filename}, status=200)
         return JsonResponse({'success': True, 'processing': True, 'geofeatures': [], 'log': [], 'msg': 'uploaded data still processing'}, status=200)
@@ -84,7 +86,7 @@ def fetch_import_queue(request, item_id):
 
 @login_required_401
 def fetch_import_waiting(request):
-    user_items = ImportQueue.objects.exclude(data__contains='[]').filter(user=request.user).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp')
+    user_items = ImportQueue.objects.exclude(data__contains='[]').filter(user=request.user, imported=False).values('id', 'geofeatures', 'original_filename', 'raw_kml_hash', 'data', 'log', 'timestamp', 'imported')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     lock_manager = DBLockManager()
     for i, item in enumerate(data):
@@ -97,7 +99,7 @@ def fetch_import_waiting(request):
 
 @login_required_401
 def fetch_import_history(request):
-    user_items = ImportQueue.objects.filter(geofeatures__contains='[]', user=request.user).values('id', 'original_filename', 'timestamp')
+    user_items = ImportQueue.objects.filter(imported=True).values('id', 'original_filename', 'timestamp')
     data = json.loads(json.dumps(list(user_items), cls=DjangoJSONEncoder))
     return JsonResponse({'data': data})
 
@@ -159,14 +161,48 @@ def update_import_item(request, item_id):
         c.properties.tags = generate_auto_tags(c)
         parsed_data.append(json.loads(c.model_dump_json()))
 
-    # Erase the geofeatures column
-    queue.geofeatures = []
-
     # Update the data column with the new data
     queue.data = parsed_data
 
     queue.save()
     return JsonResponse({'success': True, 'msg': 'Item updated successfully'})
+
+
+@login_required_401
+@csrf_protect  # TODO: put this on all routes
+@require_http_methods(["POST"])
+def import_to_featurestore(request, item_id):
+    try:
+        import_item = ImportQueue.objects.get(id=item_id)
+    except ImportQueue.DoesNotExist:
+        return JsonResponse({'success': False, 'msg': 'ID does not exist', 'code': 404}, status=400)
+    if import_item.user_id != request.user.id:
+        return JsonResponse({'success': False, 'msg': 'not authorized to edit this item', 'code': 403}, status=403)
+
+    import_item.imported = True
+
+    i = 0
+    for feature in import_item.geofeatures:
+        match feature['type'].lower():
+            case 'point':
+                c = GeoPoint(**feature)
+            case 'linestring':
+                c = GeoLineString(**feature)
+            case 'polygon':
+                c = GeoPolygon(**feature)
+            case _:
+                continue
+        data = json.loads(c.model_dump_json())
+        feature = FeatureStore.objects.create(geojson=data, source=import_item, user=request.user)
+        feature.save()
+        i += 1
+
+    # Erase the geofeatures column
+    import_item.geofeatures = []
+
+    import_item.save()
+
+    return JsonResponse({'success': True, 'msg': f'Successfully imported {i} items'})
 
 
 def _hash_kml(b: str):

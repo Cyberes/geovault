@@ -31,12 +31,12 @@
       <div class="text-center mt-2">{{ uploadProgress }}%</div>
     </div>
 
-    <div class="prose" v-html="uploadResponse"></div>
-
-    <div v-if="uploadMsg !== ''" class="mt-10 max-h-40 overflow-y-auto bg-gray-200 rounded-s p-5">
-      <strong>Message from Server:</strong><br>
+    <div v-if="uploadMsg !== ''" class="max-h-40 overflow-y-auto bg-gray-200 rounded-s p-5">
+      <!--      <strong>Message from Server:</strong><br>-->
       {{ uploadMsg }}
     </div>
+
+    <div class="prose mt-5" v-html="uploadResponse"></div>
   </div>
 
   <div class="prose mt-10">
@@ -56,6 +56,7 @@ import {capitalizeFirstLetter} from "@/assets/js/string.js";
 import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
 import {ImportQueueItem} from "@/assets/js/types/import-types"
 import Importqueue from "@/components/import/parts/importqueue.vue";
+import {getCookie} from "@/assets/js/auth.js";
 
 // TODO: after import, don't disable the upload, instead add the new item to a table at the button and then prompt the user to continue
 
@@ -104,10 +105,13 @@ export default {
         const response = await axios.post('/api/data/item/import/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'X-CSRFToken': this.userInfo.csrftoken
+            'X-CSRFToken': getCookie('csrftoken')
           },
-          onUploadProgress: (progressEvent) => { // Add this block
+          onUploadProgress: (progressEvent) => {
             this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            if (this.uploadProgress === 100) {
+              this.uploadMsg = "Processing..."
+            }
           },
         })
         this.uploadMsg = capitalizeFirstLetter(response.data.msg).trim(".") + "."
@@ -136,6 +140,8 @@ export default {
       vm.file = null
       vm.disableUpload = false
       vm.uploadMsg = ""
+      vm.uploadProgress = 0
+      vm.uploadResponse = ""
     })
   },
   watch: {},

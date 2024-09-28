@@ -1,8 +1,4 @@
 <template>
-  <!--  <div class="mt-4">-->
-  <!--    <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" @click="fetchQueueList">Refresh</button>-->
-  <!--  </div>-->
-
   <table class="mt-6 w-full border-collapse">
     <thead>
     <tr class="bg-gray-100">
@@ -50,6 +46,7 @@ import {authMixin} from "@/assets/js/authMixin.js";
 import axios from "axios";
 import {IMPORT_QUEUE_LIST_URL} from "@/assets/js/import/url.js";
 import {ImportQueueItem} from "@/assets/js/types/import-types";
+import {getCookie} from "@/assets/js/auth.js";
 
 export default {
   computed: {
@@ -63,34 +60,47 @@ export default {
     }
   },
   methods: {
+    subscribeToRefreshMutation() {
+      this.$store.subscribe((mutation, state) => {
+        if (mutation.type === 'triggerImportQueueRefresh') {
+          this.refreshData();
+        }
+      });
+    },
+    async refreshData() {
+      console.log("IMPORT QUEUE: refreshing")
+      await this.fetchQueueList()
+    },
     async fetchQueueList() {
+      this.isLoading = true
       const response = await axios.get(IMPORT_QUEUE_LIST_URL)
       const ourImportQueue = response.data.data.map((item) => new ImportQueueItem(item))
-      this.$store.commit('importQueue', ourImportQueue)
+      this.$store.commit('setImportQueue', ourImportQueue)
       this.isLoading = false
     },
     async deleteItem(item, index) {
-      if (window.confirm(`Delete "${item.original_filename}" (#${item.id})`))
+      if (window.confirm(`Delete "${item.original_filename}" (#${item.id})`)) {
         try {
-          this.importQueue.splice(index, 1)
-          // TODO: add a message popup when delete is completed
+          this.importQueue.splice(index, 1);
           const response = await axios.delete('/api/data/item/import/delete/' + item.id, {
             headers: {
-              'X-CSRFToken': this.userInfo.csrftoken
+              'X-CSRFToken': getCookie('csrftoken')
             }
-          })
+          });
           if (!response.data.success) {
-            throw new Error("server reported failure")
+            throw new Error("server reported failure");
           }
-          await this.fetchQueueList()
+          await this.refreshData(); // Refresh the data after deleting an item
         } catch (error) {
-          alert(`Failed to delete ${item.id}: ${error.message}`)
-          this.importQueue.splice(index, 0, item)
+          alert(`Failed to delete ${item.id}: ${error.message}`);
+          this.importQueue.splice(index, 0, item);
         }
-    }
+      }
+    },
   },
   async created() {
     await this.fetchQueueList()
+    this.subscribeToRefreshMutation()
   },
 }
 </script>

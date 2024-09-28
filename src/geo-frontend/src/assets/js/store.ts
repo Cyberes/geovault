@@ -6,7 +6,8 @@ import {ImportQueueItem} from "@/assets/js/types/import-types";
 export default createStore({
     state: {
         userInfo: UserInfo,
-        importQueue: ImportQueueItem
+        importQueue: ImportQueueItem,
+        importQueueRefreshTrigger: false,
 
     }, mutations: {
         userInfo(state, payload) {
@@ -14,10 +15,21 @@ export default createStore({
         },
         importQueue(state, payload) {
             state.importQueue = payload
-        }
+        },
+        setImportQueue(state, importQueue) {
+            state.importQueue = importQueue;
+        },
+        triggerImportQueueRefresh(state) {
+            state.importQueueRefreshTrigger = !state.importQueueRefreshTrigger;
+        },
     }, getters: {
         // alertExists: (state) => (message) => {
         //     return state.siteAlerts.includes(message);
         // },
-    }
+    },
+    actions: {
+        refreshImportQueue({commit}) {
+            commit('triggerImportQueueRefresh');
+        },
+    },
 })
