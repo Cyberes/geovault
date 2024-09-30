@@ -7,4 +7,4 @@ class GeojsonRawProperty(BaseModel):
     # A class to whitelist these properties.
     name: str
     description: Optional[str] = None
-    feature_tags: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list, alias='feature_tags')  # kml2geojson calls this field `feature_tags`

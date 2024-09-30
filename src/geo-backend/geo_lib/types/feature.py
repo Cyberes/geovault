@@ -1,12 +1,11 @@
-from datetime import datetime
+import json
 from enum import Enum
-from typing import Optional, List, Union, Tuple
+from typing import List, Tuple, Optional
+from typing import Union
 
-import pytz
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from geo_lib.daemon.workers.workers_lib.importer.logging import ImportLog
-from geo_lib.geo_backend import SOFTWARE_NAME, SOFTWARE_VERSION
 
 
 class GeoFeatureType(str, Enum):
@@ -15,42 +14,54 @@ class GeoFeatureType(str, Enum):
     POLYGON = 'Polygon'
 
 
-class GeoFeatureProperties(BaseModel):
-    tags: List[str] = Field(default_factory=list)
-    created: datetime = datetime.utcnow().replace(tzinfo=pytz.utc)
-    software: str = Field(SOFTWARE_NAME, frozen=True)
-    software_version: str = Field(SOFTWARE_VERSION, frozen=True)
+class Rendering(BaseModel):
+    stroke_width: int = Field(2, alias='strokeWidth')
+    stroke_color: Tuple[int, int, int, float] = Field((255, 0, 0, 1.0), alias='strokeColor')
+    fill_color: Optional[Tuple[int, int, int, float]] = Field((255, 0, 0, 0.2), alias='fillColor')
 
 
-class GeoFeature(BaseModel):
-    """
-    A thing that's shown on the map.
-    Can be a point, linestring, or polygon.
-    """
+class Properties(BaseModel):
     name: str
-    id: int  # From the database
-    type: GeoFeatureType
+    id: Optional[int] = -1
     description: Optional[str] = None
-    geometry: List
-    properties: GeoFeatureProperties = Field(default_factory=GeoFeatureProperties)
+    tags: Optional[List[str]] = Field(default_factory=list)
+    rendering: Optional[Rendering] = Field(default_factory=Rendering)
 
 
-class GeoPoint(GeoFeature):
+class PointFeatureGeometry(BaseModel):
     type: GeoFeatureType = GeoFeatureType.POINT
-    geometry: List[float]
+    coordinates: Union[Tuple[float, float], Tuple[float, float, float]]
 
 
-class GeoLineString(GeoFeature):
+class LineStringGeometry(BaseModel):
     type: GeoFeatureType = GeoFeatureType.LINESTRING
-    geometry: List[List[float]]
+    coordinates: List[Union[Tuple[float, float], Tuple[float, float, float], Tuple[float, float, float, int]]]
 
 
-class GeoPolygon(GeoFeature):
+class PolygonGeometry(BaseModel):
     type: GeoFeatureType = GeoFeatureType.POLYGON
-    geometry: List[List[List[float]]]
+    coordinates: List[List[Union[Tuple[float, float], Tuple[float, float, float]]]]
 
 
-GeoFeatureSupported = Union[GeoPoint, GeoLineString, GeoPolygon]
+class Feature(BaseModel):
+    type: str = 'Feature'
+    geometry: Union[PointFeatureGeometry, LineStringGeometry, PolygonGeometry]
+    properties: Properties
+
+
+class PointFeature(Feature):
+    geometry: PointFeatureGeometry
+
+
+class LineStringFeature(Feature):
+    geometry: LineStringGeometry
+
+
+class PolygonFeature(Feature):
+    geometry: PolygonGeometry
+
+
+GeoFeatureSupported = Union[PointFeature, LineStringFeature, PolygonFeature]
 
 
 def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], ImportLog]:
@@ -59,20 +70,32 @@ def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], Imp
     for item in geojson['features']:
         match item['geometry']['type'].lower():
             case 'point':
-                c = GeoPoint
+                c = PointFeature
             case 'linestring':
-                c = GeoLineString
+                c = LineStringFeature
             case 'polygon':
-                c = GeoPolygon
+                c = PolygonFeature
             case _:
                 import_log.add(f'Feature named "{item["properties"]["title"]}" had unsupported type "{item["geometry"]["type"]}".')
                 continue
-        result.append(c(
-            name=item['properties']['title'],
-            id=-1,  # This will be updated after it's added to the main data store.
-            description=item['properties']['description'],
-            tags=item['properties']['feature_tags'],
-            geometry=item['geometry']['coordinates']
-        ))
+
+        f = c(**item)
+        if isinstance(f, (PointFeature, LineStringFeature)):
+            del f.properties.rendering.fill_color
+
+        # TODO: do this shit
+        f.properties.id = -1  # This will be updated after it's added to the main data store.
+
+        result.append(f)
 
     return result, import_log
+
+
+def geofeature_to_geojson(feature: Union[GeoFeatureSupported, list]) -> str:
+    if isinstance(feature, list):
+        return json.dumps({
+            'type': 'FeatureCollection',
+            'features': [json.loads(x.model_dump_json(by_alias=True)) for x in feature]
+        })
+    else:
+        return feature.model_dump_json(by_alias=True)

@@ -1,4 +1,3 @@
-Django backend, vue.js frontend
 Tagging support (tag roads, trails, etc)
 Sharing (share individual items or select items or tags to include)
 Organization by folder

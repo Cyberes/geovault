@@ -47,7 +47,7 @@ def process_feature(converted_kml) -> Tuple[list, ImportLog]:
                 for i, timestamp_str in enumerate(feature['properties']['times']):
                     timestamp = int(parse(timestamp_str).timestamp() * 1000)
                     feature['geometry']['coordinates'][i].append(timestamp)
-            feature['properties'] = GeojsonRawProperty(**feature['properties']).dict()
+            feature['properties'] = GeojsonRawProperty(**feature['properties']).model_dump()
             features.append(feature)
         else:
             # Log the error
@@ -78,5 +78,4 @@ def load_geojson_type(data: dict) -> dict:
             'coordinates': item.pop('coordinates'),
         }
         item['type'] = 'Feature'
-        item['properties']['title'] = item['properties'].pop('name')
     return geojson_dict
