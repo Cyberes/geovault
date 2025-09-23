@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'website.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'geobackend',
-        'USER': 'geobackend',
+        'NAME': 'geoserver',
+        'USER': 'geoserver',
         'PASSWORD': 'juu1waigu1pookee1ohcierahMoofie3',
-        'HOST': 'h.postgres.nb',
+        'HOST': '172.0.2.105',
         'PORT': '',
     }
 }

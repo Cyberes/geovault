@@ -13,7 +13,7 @@ from data.models import ImportQueue, FeatureStore
 from geo_lib.daemon.database.locking import DBLockManager
 from geo_lib.daemon.workers.workers_lib.importer.kml import kmz_to_kml
 from geo_lib.daemon.workers.workers_lib.importer.tagging import generate_auto_tags
-from geo_lib.types.feature import GeoPoint, GeoLineString, GeoPolygon
+from geo_lib.types.feature import PointFeature, PolygonFeature, LineStringFeature
 from geo_lib.website.auth import login_required_401
 
 
@@ -149,11 +149,11 @@ def update_import_item(request, item_id):
     for feature in data:
         match feature['type'].lower():
             case 'point':
-                c = GeoPoint(**feature)
+                c = PointFeature
             case 'linestring':
-                c = GeoLineString(**feature)
+                c = LineStringFeature
             case 'polygon':
-                c = GeoPolygon(**feature)
+                c = PolygonFeature
             case _:
                 continue
 
@@ -185,11 +185,11 @@ def import_to_featurestore(request, item_id):
     for feature in import_item.geofeatures:
         match feature['type'].lower():
             case 'point':
-                c = GeoPoint(**feature)
+                c = PointFeature(**feature)
             case 'linestring':
-                c = GeoLineString(**feature)
+                c = LineStringFeature(**feature)
             case 'polygon':
-                c = GeoPolygon(**feature)
+                c = PolygonFeature(**feature)
             case _:
                 continue
         data = json.loads(c.model_dump_json())

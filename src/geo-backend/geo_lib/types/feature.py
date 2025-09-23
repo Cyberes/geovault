@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Type
 from typing import Union
 
 from pydantic import BaseModel, Field
@@ -61,7 +61,7 @@ class PolygonFeature(Feature):
     geometry: PolygonGeometry
 
 
-GeoFeatureSupported = Union[PointFeature, LineStringFeature, PolygonFeature]
+GeoFeatureSupported = Type[PolygonFeature | LineStringFeature | PointFeature]
 
 
 def geojson_to_geofeature(geojson: dict) -> Tuple[List[GeoFeatureSupported], ImportLog]:

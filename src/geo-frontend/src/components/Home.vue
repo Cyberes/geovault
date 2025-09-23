@@ -9,7 +9,27 @@
 </template>
 
 
-<script setup>
+<script>
+import {authMixin} from "@/assets/js/authMixin.js";
+
+export default {
+  components: {},
+  mixins: [authMixin],
+  data() {
+    return {}
+  },
+  methods: {},
+  async created() {
+    await this.fetchHistory()
+  },
+  // async mounted() {
+  // },
+  // beforeRouteEnter(to, from, next) {
+  //   next(async vm => {
+  //   })
+  // },
+  watch: {},
+};
 </script>
 
 <style scoped>

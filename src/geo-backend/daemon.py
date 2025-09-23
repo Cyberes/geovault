@@ -14,7 +14,7 @@ if __name__ == "__main__":
     flush_redis()
 
     # TODO: config
-    Database.initialise(minconn=1, maxconn=100, host='h.postgres.nb', database='geobackend', user='geobackend', password='juu1waigu1pookee1ohcierahMoofie3')
+    Database.initialise(minconn=1, maxconn=100, host='172.0.2.105', database='geoserver', user='geoserver', password='juu1waigu1pookee1ohcierahMoofie3')
 
     import_thread = threading.Thread(target=import_worker)
     import_thread.start()
