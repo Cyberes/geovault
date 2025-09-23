@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"><Document><name>CalTopo Export</name><description>Export from CalTopo</description><Folder><open>1</open><name>Points</name><Placemark><Style><IconStyle><hotSpot x="0.5" xunits="fraction" y="0.5" yunits="fraction"/><Icon><href>http://caltopo.com/icon.png?cfg=point%2CFF0000%231.0</href></Icon></IconStyle></Style><description>Point comment #1.</description><name>Point #1</name><Point><coordinates>-103.23321,40.18681,0</coordinates></Point></Placemark><Placemark><Style><IconStyle><hotSpot x="0.5" xunits="fraction" y="0.5" yunits="fraction"/><Icon><href>http://caltopo.com/icon.png?cfg=point%2C0000FF%231.0</href></Icon></IconStyle></Style><description>Point comment #2.</description><name>Point #2</name><Point><coordinates>-104.26043,39.43149,0</coordinates></Point></Placemark></Folder><Folder><open>1</open><name>LineStrings</name><Placemark><Style><LineStyle><color>FF0000FF</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle></Style><description>Line comment #1.</description><name>Line #1</name><LineString><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><coordinates>-102.3762815944828,39.70250651971969,0.0
+-104.0022581569828,38.94186200533267,0.0
+-103.4639280788578,38.26791257513303,0.0
+-102.7498167507328,38.414400081502194,0.0
+-103.4364622585453,38.937589380760414,0.0
+-103.5298460476078,38.69791175671248,0.0
+-103.2606810085453,38.44022006030676,0.0
+-103.0574339382328,38.54770390821858,0.0
+-103.3375853054203,38.70648555762732,0.0
+-103.3705442897953,38.787885385838116,0.0
+</coordinates></LineString></Placemark><Placemark><Style><LineStyle><color>FFFF0000</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle></Style><description>Line comment #2.</description><name>Line #2</name><LineString><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><coordinates>-107.6002806179203,39.66445351631023,0.0
+-106.1775511257328,39.07844399706762,0.0
+-105.0349730007328,38.56488038549641,0.0
+-104.5790403835453,38.860632092481865,0.0
+-104.0626829616703,39.15941828258434,0.0
+-103.6342161647953,39.461182069940044,0.0
+-103.7166136257328,39.562892268950876,0.0
+-104.3483274929203,39.68136590237291,0.0
+-103.9967649929203,39.92191726208537,0.0
+</coordinates></LineString></Placemark><Placemark><Style><LineStyle><color>FF0000FF</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle><PolyStyle><color>1A0000FF</color><fill>1</fill><outline>1</outline><width>2.0</width></PolyStyle><IconStyle><scale>0</scale></IconStyle></Style><description>Polygon comment #1.</description><name>Polygon #1</name><MultiGeometry><Point><coordinates>-104.29977328286277,37.97936047517191,0</coordinates></Point><Polygon><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>-104.48743043175796,38.09644604353499,0.0
+-104.39404664269546,37.853958849056184,0.0
+-104.08093629113296,37.82359164847685,0.0
+-104.25671754113296,38.13966299031064,0.0
+-104.42151246300796,38.131021647140756,0.0
+-104.42151246300796,38.131021647140756,0.0
+-104.48743043175796,38.09644604353499,0.0
+</coordinates></LinearRing></outerBoundaryIs></Polygon></MultiGeometry></Placemark><Placemark><Style><LineStyle><color>FFFF0000</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle><PolyStyle><color>1AFF0000</color><fill>1</fill><outline>1</outline><width>2.0</width></PolyStyle><IconStyle><scale>0</scale></IconStyle></Style><description>Polygon Comment #2</description><name>Polygon #2</name><MultiGeometry><Point><coordinates>-104.48646104187391,40.4536992369933,0</coordinates></Point><Polygon><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>-104.26480050365116,40.89226434790851,0.0
+-105.27004952708866,40.64681267630733,0.0
+-104.83059640208866,40.05235236955955,0.0
+-103.81985421458866,40.16998449069924,0.0
+-103.87478585521366,40.613461309718836,0.0
+-104.19888253490116,40.79252899727321,0.0
+-104.26480050365116,40.89226434790851,0.0
+</coordinates></LinearRing></outerBoundaryIs></Polygon></MultiGeometry></Placemark></Folder></Document></kml>
