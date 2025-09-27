@@ -1,0 +1,17 @@
+This is not a KMZ file at all!
+It's just plain text with a .kmz extension.
+This should be rejected by file signature validation.
+
+KMZ files should be ZIP archives starting with PK\x03\x04
+This file starts with "This is not a KMZ file"
+
+This file is designed to test:
+1. File signature validation (should fail - not a ZIP file)
+2. MIME type validation
+3. Content structure validation
+
+The file should be rejected because:
+- It doesn't start with ZIP file signature
+- It's not a valid ZIP archive
+- It has the wrong MIME type
+- It's not a valid KMZ structure

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+        <name>Suspicious Filename Test</name>
+        <description>This KML file has a suspicious filename for testing</description>
+        <Placemark>
+            <name>Test Placemark</name>
+            <description>This is a normal placemark in a file with suspicious filename</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

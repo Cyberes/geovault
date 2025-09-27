@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+        <name>Malicious XSS KML</name>
+        <description>This KML contains XSS payloads for testing</description>
+        
+        <!-- Malicious script tag -->
+        <script>
+            alert('XSS Attack via script tag!');
+            document.cookie = 'stolen=value';
+        </script>
+        
+        <!-- Malicious iframe -->
+        <iframe src="javascript:alert('XSS via iframe!')" width="0" height="0"></iframe>
+        
+        <!-- Malicious object tag -->
+        <object data="javascript:alert('XSS via object!')"></object>
+        
+        <!-- Malicious embed tag -->
+        <embed src="javascript:alert('XSS via embed!')">
+        
+        <!-- Malicious applet tag -->
+        <applet code="MaliciousApplet.class">
+            <param name="code" value="alert('XSS via applet!')">
+        </applet>
+        
+        <!-- Normal placemark with malicious attributes -->
+        <Placemark onclick="alert('XSS via onclick!')" onload="alert('XSS via onload!')" onmouseover="alert('XSS via onmouseover!')">
+            <name>Dangerous Placemark</name>
+            <description>This placemark has dangerous event handlers</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <!-- Placemark with malicious href -->
+        <Placemark>
+            <name>Malicious Link</name>
+            <description>This has a malicious link</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+            <styleUrl>javascript:alert('XSS via href!')</styleUrl>
+        </Placemark>
+        
+        <!-- Malicious form -->
+        <form action="javascript:alert('XSS via form!')" method="post">
+            <input type="text" name="malicious" value="XSS payload">
+            <input type="submit" value="Submit">
+        </form>
+        
+        <!-- Malicious link -->
+        <link href="javascript:alert('XSS via link!')" rel="stylesheet">
+        
+        <!-- Malicious meta tag -->
+        <meta http-equiv="refresh" content="0;url=javascript:alert('XSS via meta!')">
+        
+        <!-- Malicious style tag -->
+        <style>
+            body { background: url('javascript:alert("XSS via CSS!")'); }
+        </style>
+        
+        <!-- Normal placemark for comparison -->
+        <Placemark>
+            <name>Safe Placemark</name>
+            <description>This is a normal, safe placemark</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

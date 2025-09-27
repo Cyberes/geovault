@@ -1,0 +1,18 @@
+This is not a KML file at all!
+It's just plain text with a .kml extension.
+This should be rejected by file signature validation.
+
+Some malicious content:
+<script>alert('XSS!')</script>
+<iframe src="javascript:alert('XSS!')"></iframe>
+
+This file is designed to test:
+1. File signature validation
+2. MIME type validation
+3. Content structure validation
+
+The file should be rejected because:
+- It doesn't start with <?xml
+- It's not valid XML
+- It contains malicious content
+- It has the wrong MIME type
