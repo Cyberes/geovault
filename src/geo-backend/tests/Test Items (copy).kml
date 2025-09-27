@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>CalTopo Export</name>
+	<open>1</open>
+	<description>Export from CalTopo</description>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10441"></atom:link>
+	<Folder>
+		<name>Points</name>
+		<open>1</open>
+		<Placemark>
+			<name>Point #1 duplicate</name>
+			<description>Point comment #1.</description>
+			<Style>
+				<IconStyle>
+					<Icon>
+						<href>http://caltopo.com/icon.png?cfg=point%2CFF0000%231.0</href>
+					</Icon>
+					<hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+				</IconStyle>
+			</Style>
+			<Point>
+				<coordinates>-103.23321,40.18681,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
