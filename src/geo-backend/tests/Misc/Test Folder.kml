@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
 <Document>
-	<name>Test Folder.kmz</name>
-	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10441"></atom:link>
+	<name>Test Folder.kml</name>
 	<StyleMap id="m_ylw-pushpin">
 		<Pair>
 			<key>normal</key>
@@ -95,11 +94,11 @@
 				<listItemType>check</listItemType>
 				<ItemIcon>
 					<state>open</state>
-					<href>mysavedplaces_open.png</href>
+					<href>:/mysavedplaces_open.png</href>
 				</ItemIcon>
 				<ItemIcon>
 					<state>closed</state>
-					<href>mysavedplaces_closed.png</href>
+					<href>:/mysavedplaces_closed.png</href>
 				</ItemIcon>
 				<bgColor>00ffffff</bgColor>
 				<maxSnippetLines>2</maxSnippetLines>
@@ -154,6 +153,7 @@
 				</Placemark>
 			</Folder>
 		</Folder>
+		<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10441"></atom:link>
 	</Folder>
 </Document>
 </kml>
