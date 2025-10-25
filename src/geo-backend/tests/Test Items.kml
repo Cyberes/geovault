@@ -18,7 +18,16 @@
 -103.7166136257328,39.562892268950876,0.0
 -104.3483274929203,39.68136590237291,0.0
 -103.9967649929203,39.92191726208537,0.0
-</coordinates></LineString></Placemark><Placemark><Style><LineStyle><color>FF0000FF</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle><PolyStyle><color>1A0000FF</color><fill>1</fill><outline>1</outline><width>2.0</width></PolyStyle><IconStyle><scale>0</scale></IconStyle></Style><description>Polygon comment #1.</description><name>Polygon #1</name><MultiGeometry><Point><coordinates>-104.29977328286277,37.97936047517191,0</coordinates></Point><Polygon><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>-104.48743043175796,38.09644604353499,0.0
+</coordinates></LineString></Placemark><Placemark><Style><LineStyle><color>FF0000FF</color><width>2.0</width><gx:labelVisibility>1</gx:labelVisibility></LineStyle><PolyStyle><color>1A0000FF</color><fill>1</fill><outline>1</outline><width>2.0</width></PolyStyle><IconStyle><scale>0</scale></IconStyle></Style><description>Polygon comment #1.
+
+&lt;h3&gt;Admiralty Islands lowland rain forests&lt;/h3&gt;
+&lt;table border="1" cellpadding="3" cellspacing="0"&gt;
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;Biome:&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Tropical &amp; Subtropical Moist Broadleaf Forests&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;Realm:&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Australasia&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;NNH Status:&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Nature Could Reach Half Protected&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;NNH Level:&lt;/b&gt;&lt;/td&gt;&lt;td&gt;2&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;Color:&lt;/b&gt;&lt;/td&gt;&lt;td&gt;#70A800&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</description><name>Polygon #1</name><MultiGeometry><Point><coordinates>-104.29977328286277,37.97936047517191,0</coordinates></Point><Polygon><altitudeMode>clampToGround</altitudeMode><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>-104.48743043175796,38.09644604353499,0.0
 -104.39404664269546,37.853958849056184,0.0
 -104.08093629113296,37.82359164847685,0.0
 -104.25671754113296,38.13966299031064,0.0
