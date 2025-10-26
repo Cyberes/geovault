@@ -16,6 +16,12 @@ NC='\033[0m' # No Color
 FRONTEND_DIR="/home/dpanzer/Nextcloud/Documents/Tech/Code/geoserver/src/geo-frontend"
 WATCH_DIRS=("src" "public" "index.html" "vite.config.js" "tailwind.config.js" "postcss.config.js")
 BUILD_COMMAND="npm run build"
+DEBOUNCE_INTERVAL=5  # Minimum seconds between builds
+
+# Global variables for debouncing
+LAST_BUILD_TIME=0
+BUILD_IN_PROGRESS=false
+QUEUED_REBUILD=false
 
 # Function to print colored output
 print_status() {
@@ -41,9 +47,95 @@ build_frontend() {
     
     if npm run build; then
         print_success "Frontend build completed successfully!"
+        
+        # Restore standalone_map.html from git (it gets deleted during build)
+        print_status "Restoring standalone_map.html from git..."
+        if git checkout HEAD -- dist/standalone_map.html 2>/dev/null; then
+            print_success "standalone_map.html restored successfully!"
+        else
+            print_warning "Could not restore standalone_map.html (file may not exist in git)"
+        fi
+        
+        # Update last build time
+        LAST_BUILD_TIME=$(date +%s)
+        BUILD_IN_PROGRESS=false
+        
+        # Check if there's a queued rebuild and handle it
+        if [ "$QUEUED_REBUILD" = true ]; then
+            print_status "Handling queued rebuild after successful build..."
+            QUEUED_REBUILD=false
+            BUILD_IN_PROGRESS=true
+            build_frontend
+        fi
     else
         print_error "Frontend build failed!"
+        BUILD_IN_PROGRESS=false
         return 1
+    fi
+}
+
+# Function to check if enough time has passed since last build
+can_build() {
+    local current_time
+    current_time=$(date +%s)
+    local time_diff=$((current_time - LAST_BUILD_TIME))
+    
+    # Don't build if already in progress or not enough time has passed
+    if [ "$BUILD_IN_PROGRESS" = true ] || [ "$time_diff" -lt "$DEBOUNCE_INTERVAL" ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Function to handle queued rebuild after timeout
+handle_queued_rebuild() {
+    if [ "$QUEUED_REBUILD" = true ]; then
+        print_status "Processing queued rebuild after timeout..."
+        QUEUED_REBUILD=false
+        BUILD_IN_PROGRESS=true
+        build_frontend
+    fi
+}
+
+# Function to start queued rebuild timer
+start_queued_rebuild_timer() {
+    if [ "$QUEUED_REBUILD" = false ]; then
+        QUEUED_REBUILD=true
+        local current_time
+        current_time=$(date +%s)
+        local time_diff=$((current_time - LAST_BUILD_TIME))
+        local remaining=$((DEBOUNCE_INTERVAL - time_diff))
+        
+        print_warning "Build queued - will rebuild in $remaining seconds"
+        
+        # Start background process to handle queued rebuild
+        (
+            sleep "$remaining"
+            handle_queued_rebuild
+        ) &
+    fi
+}
+
+# Function to debounced build (only builds if enough time has passed)
+debounced_build() {
+    if can_build; then
+        BUILD_IN_PROGRESS=true
+        QUEUED_REBUILD=false  # Cancel any queued rebuild
+        build_frontend
+    else
+        local current_time
+        current_time=$(date +%s)
+        local time_diff=$((current_time - LAST_BUILD_TIME))
+        
+        if [ "$BUILD_IN_PROGRESS" = true ]; then
+            print_warning "Build skipped - build already in progress"
+            # Queue a rebuild for after current build completes
+            start_queued_rebuild_timer
+        else
+            # Queue a rebuild for after the debounce timeout
+            start_queued_rebuild_timer
+        fi
     fi
 }
 
@@ -108,6 +200,8 @@ main() {
     fi
     
     print_status "Watching for changes in: $WATCH_PATHS"
+    print_status "Debouncing enabled: maximum 1 build every $DEBOUNCE_INTERVAL seconds"
+    print_status "Queued rebuilds: changes during debounce period will trigger rebuild after timeout"
     print_status "Press Ctrl+C to stop watching"
     echo
     
@@ -123,15 +217,8 @@ main() {
         
         print_status "File changed: $file ($event)"
         
-        # Small delay to avoid multiple builds for rapid changes
-        sleep 0.5
-        
-        # Build the frontend
-        if build_frontend; then
-            print_success "Rebuild completed for: $file"
-        else
-            print_error "Rebuild failed for: $file"
-        fi
+        # Use debounced build to prevent excessive rebuilds
+        debounced_build
         
         echo "---"
     done
