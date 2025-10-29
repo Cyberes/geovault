@@ -182,6 +182,44 @@ check_node_modules() {
     fi
 }
 
+# Function to start file watcher
+start_file_watcher() {
+    # Create watch paths
+    WATCH_PATHS=""
+    for dir in "${WATCH_DIRS[@]}"; do
+        if [ -e "$FRONTEND_DIR/$dir" ]; then
+            WATCH_PATHS="$WATCH_PATHS $FRONTEND_DIR/$dir"
+        else
+            print_warning "Watch path $dir does not exist, skipping..."
+        fi
+    done
+    
+    if [ -z "$WATCH_PATHS" ]; then
+        print_error "No valid watch paths found!"
+        return 1
+    fi
+    
+    print_status "Starting file watcher for: $WATCH_PATHS"
+    
+    # Start inotifywait directly without named pipes
+    inotifywait -m -r -e modify,create,delete,move \
+        --format '%w%f %e' \
+        $WATCH_PATHS | while read -r file event; do
+        
+        # Skip certain files/directories
+        if [[ "$file" =~ (node_modules|\.git|dist|\.cache|\.DS_Store) ]]; then
+            continue
+        fi
+        
+        print_status "File changed: $file ($event)"
+        
+        # Use debounced build to prevent excessive rebuilds
+        debounced_build
+        
+        echo "---"
+    done
+}
+
 # Main function
 main() {
     print_status "Starting frontend watch script..."
@@ -198,81 +236,32 @@ main() {
     print_status "Performing initial build..."
     build_frontend
     
-    # Create watch paths
-    WATCH_PATHS=""
-    for dir in "${WATCH_DIRS[@]}"; do
-        if [ -e "$FRONTEND_DIR/$dir" ]; then
-            WATCH_PATHS="$WATCH_PATHS $FRONTEND_DIR/$dir"
-        else
-            print_warning "Watch path $dir does not exist, skipping..."
-        fi
-    done
-    
-    if [ -z "$WATCH_PATHS" ]; then
-        print_error "No valid watch paths found!"
-        exit 1
-    fi
-    
-    print_status "Watching for changes in: $WATCH_PATHS"
     print_status "Debouncing enabled: maximum 1 build every $DEBOUNCE_INTERVAL seconds"
     print_status "Queued rebuilds: changes during debounce period will trigger rebuild after timeout"
     print_status "Press Ctrl+C to stop watching"
     echo
     
-    # Watch for changes with proper error handling
+    # Watch for changes with automatic restart on failure
     while true; do
         print_status "Starting file watcher..."
         
-        # Use a named pipe to avoid subshell issues
-        PIPE_FILE="/tmp/watch-frontend-pipe-$$"
-        mkfifo "$PIPE_FILE"
-        
-        # Start inotifywait in background
-        inotifywait -m -r -e modify,create,delete,move \
-            --format '%w%f %e' \
-            $WATCH_PATHS > "$PIPE_FILE" &
-        
-        INOTIFY_PID=$!
-        
-        # Read from pipe in main process
-        while read -r file event < "$PIPE_FILE"; do
-            # Skip certain files/directories
-            if [[ "$file" =~ (node_modules|\.git|dist|\.cache) ]]; then
-                continue
-            fi
-            
-            print_status "File changed: $file ($event)"
-            
-            # Use debounced build to prevent excessive rebuilds
-            debounced_build
-            
-            echo "---"
-        done
-        
-        # Clean up pipe
-        rm -f "$PIPE_FILE"
-        
-        # Check if inotifywait is still running
-        if ! kill -0 "$INOTIFY_PID" 2>/dev/null; then
-            print_error "inotifywait process died unexpectedly (PID: $INOTIFY_PID)"
-            print_status "Restarting file watcher in 5 seconds..."
-            sleep 5
+        # Start file watcher
+        if start_file_watcher; then
+            print_error "File watcher exited unexpectedly"
         else
-            print_error "Unexpected exit from file watcher loop"
-            break
+            print_error "File watcher failed to start"
         fi
+        
+        print_status "Restarting file watcher in 5 seconds..."
+        sleep 5
     done
 }
 
 # Handle Ctrl+C gracefully
 cleanup() {
     print_status "Stopping watch script..."
-    # Kill inotifywait if it's running
-    if [ -n "$INOTIFY_PID" ] && kill -0 "$INOTIFY_PID" 2>/dev/null; then
-        kill "$INOTIFY_PID" 2>/dev/null
-    fi
-    # Clean up named pipe
-    rm -f "/tmp/watch-frontend-pipe-$$"
+    # Kill any background processes
+    jobs -p | xargs -r kill 2>/dev/null || true
     exit 0
 }
 
