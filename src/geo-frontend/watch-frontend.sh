@@ -43,9 +43,23 @@ print_error() {
 # Function to build the frontend
 build_frontend() {
     print_status "Building frontend..."
-    cd "$FRONTEND_DIR"
     
-    if npm run build; then
+    # Ensure we're in the right directory
+    if ! cd "$FRONTEND_DIR"; then
+        print_error "Failed to change to frontend directory: $FRONTEND_DIR"
+        BUILD_IN_PROGRESS=false
+        return 1
+    fi
+    
+    # Check if npm is still available
+    if ! command -v npm &> /dev/null; then
+        print_error "npm command not found during build!"
+        BUILD_IN_PROGRESS=false
+        return 1
+    fi
+    
+    # Run build with explicit error handling
+    if npm run build 2>&1; then
         print_success "Frontend build completed successfully!"
         
         # Restore standalone_map.html from git (it gets deleted during build)
@@ -68,7 +82,7 @@ build_frontend() {
             build_frontend
         fi
     else
-        print_error "Frontend build failed!"
+        print_error "Frontend build failed! Exit code: $?"
         BUILD_IN_PROGRESS=false
         return 1
     fi
@@ -205,27 +219,64 @@ main() {
     print_status "Press Ctrl+C to stop watching"
     echo
     
-    # Watch for changes
-    inotifywait -m -r -e modify,create,delete,move \
-        --format '%w%f %e' \
-        $WATCH_PATHS | while read file event; do
+    # Watch for changes with proper error handling
+    while true; do
+        print_status "Starting file watcher..."
         
-        # Skip certain files/directories
-        if [[ "$file" =~ (node_modules|\.git|dist|\.cache) ]]; then
-            continue
+        # Use a named pipe to avoid subshell issues
+        PIPE_FILE="/tmp/watch-frontend-pipe-$$"
+        mkfifo "$PIPE_FILE"
+        
+        # Start inotifywait in background
+        inotifywait -m -r -e modify,create,delete,move \
+            --format '%w%f %e' \
+            $WATCH_PATHS > "$PIPE_FILE" &
+        
+        INOTIFY_PID=$!
+        
+        # Read from pipe in main process
+        while read -r file event < "$PIPE_FILE"; do
+            # Skip certain files/directories
+            if [[ "$file" =~ (node_modules|\.git|dist|\.cache) ]]; then
+                continue
+            fi
+            
+            print_status "File changed: $file ($event)"
+            
+            # Use debounced build to prevent excessive rebuilds
+            debounced_build
+            
+            echo "---"
+        done
+        
+        # Clean up pipe
+        rm -f "$PIPE_FILE"
+        
+        # Check if inotifywait is still running
+        if ! kill -0 "$INOTIFY_PID" 2>/dev/null; then
+            print_error "inotifywait process died unexpectedly (PID: $INOTIFY_PID)"
+            print_status "Restarting file watcher in 5 seconds..."
+            sleep 5
+        else
+            print_error "Unexpected exit from file watcher loop"
+            break
         fi
-        
-        print_status "File changed: $file ($event)"
-        
-        # Use debounced build to prevent excessive rebuilds
-        debounced_build
-        
-        echo "---"
     done
 }
 
 # Handle Ctrl+C gracefully
-trap 'print_status "Stopping watch script..."; exit 0' INT
+cleanup() {
+    print_status "Stopping watch script..."
+    # Kill inotifywait if it's running
+    if [ -n "$INOTIFY_PID" ] && kill -0 "$INOTIFY_PID" 2>/dev/null; then
+        kill "$INOTIFY_PID" 2>/dev/null
+    fi
+    # Clean up named pipe
+    rm -f "/tmp/watch-frontend-pipe-$$"
+    exit 0
+}
+
+trap cleanup INT TERM
 
 # Run main function
 main "$@"
