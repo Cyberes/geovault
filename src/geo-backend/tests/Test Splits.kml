@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Test Splits - MultiPoint, MultiPolygon, GeometryCollection</name>
+    <description>Test file for geometry splitting functionality</description>
+    
+    <!-- MultiPoint Feature: Multiple points that should split into individual Point features -->
+    <Placemark>
+      <name>MultiPoint Feature</name>
+      <description>This MultiPoint should split into 3 individual Point features</description>
+      <MultiGeometry>
+        <Point>
+          <coordinates>-122.4194,37.7749,0</coordinates>
+        </Point>
+        <Point>
+          <coordinates>-122.4094,37.7849,0</coordinates>
+        </Point>
+        <Point>
+          <coordinates>-122.3994,37.7949,0</coordinates>
+        </Point>
+      </MultiGeometry>
+    </Placemark>
+    
+    <!-- MultiPolygon Feature: Multiple polygons that should split into individual Polygon features -->
+    <Placemark>
+      <name>MultiPolygon Feature</name>
+      <description>This MultiPolygon should split into 2 individual Polygon features</description>
+      <MultiGeometry>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                -122.5,37.7,0
+                -122.4,37.7,0
+                -122.4,37.8,0
+                -122.5,37.8,0
+                -122.5,37.7,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                -122.3,37.6,0
+                -122.2,37.6,0
+                -122.2,37.7,0
+                -122.3,37.7,0
+                -122.3,37.6,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </MultiGeometry>
+    </Placemark>
+    
+    <!-- GeometryCollection Feature: Mixed geometries that should split into separate features -->
+    <Placemark>
+      <name>GeometryCollection Feature</name>
+      <description>This GeometryCollection should split into separate features (prioritizing Polygon)</description>
+      <MultiGeometry>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                -122.1,37.5,0
+                -122.0,37.5,0
+                -122.0,37.6,0
+                -122.1,37.6,0
+                -122.1,37.5,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+        <Point>
+          <coordinates>-122.05,37.55,0</coordinates>
+        </Point>
+        <LineString>
+          <coordinates>
+            -122.15,37.45,0
+            -122.05,37.45,0
+          </coordinates>
+        </LineString>
+      </MultiGeometry>
+    </Placemark>
+    
+    <!-- Additional test: Single Point (should NOT split) -->
+    <Placemark>
+      <name>Single Point</name>
+      <description>This single Point should remain as one feature</description>
+      <Point>
+        <coordinates>-122.3,37.9,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Additional test: Single Polygon (should NOT split) -->
+    <Placemark>
+      <name>Single Polygon</name>
+      <description>This single Polygon should remain as one feature</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -122.6,37.9,0
+              -122.5,37.9,0
+              -122.5,38.0,0
+              -122.6,38.0,0
+              -122.6,37.9,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    
+  </Document>
+</kml>
+
