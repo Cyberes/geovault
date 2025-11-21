@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-FRONTEND_DIR="/home/dpanzer/Nextcloud/Documents/Tech/Code/geoserver/src/geo-frontend"
+FRONTEND_DIR="/home/dpanzer/Nextcloud/Documents/Tech/Code/geovault/src/frontend"
 WATCH_DIRS=("src" "public" "index.html" "vite.config.js" "tailwind.config.js" "postcss.config.js")
 BUILD_COMMAND="npm run build"
 DEBOUNCE_INTERVAL=5  # Minimum seconds between builds
